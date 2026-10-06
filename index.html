@@ -8,13 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --card-bg: rgba(14, 14, 24, 0.88);
-    --text: #f4f4f8;
-    --muted: #a9a9c0;
-    --accent: #9b6bff;
-    --good: #3ddc84;
-    --bad: #ff6b6b;
-    --gold: #ffd166;
+    --card-bg: rgba(8, 5, 6, 0.92);
+    --text: #f6eeee;
+    --muted: #a88d8f;
+    --accent: #b0101c;       /* dunkelrot: Rahmen, Balken */
+    --accent-dark: #5c060d;
+    --highlight: #ff3b47;    /* helles Rot: Punkte, Namen, Countdown */
   }
   * { box-sizing: border-box; }
   html, body {
@@ -24,7 +23,7 @@
     font-family: "Outfit", system-ui, sans-serif;
     overflow: hidden;
   }
-  body.test { background: #2b2d42; }
+  body.test { background: #3a3a3a; }
 
   #stage {
     display: flex;
@@ -37,36 +36,26 @@
     border: 3px solid var(--accent);
     border-radius: 28px;
     padding: 28px 36px 32px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(176, 16, 28, 0.25);
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
   .card.hidden { opacity: 0; transform: translateY(-16px) scale(0.98); }
 
-  .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .badge {
-    background: var(--accent);
-    color: #fff;
-    font-weight: 800;
-    font-size: 20px;
-    padding: 6px 16px;
-    border-radius: 999px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
+  .top { display: flex; justify-content: flex-end; }
   .timer { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 22px 0 18px; }
+  .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 8px 0 18px; }
   .points-row { display: flex; align-items: center; gap: 16px; }
-  .points { font-size: 24px; font-weight: 600; color: var(--gold); min-width: 150px; font-variant-numeric: tabular-nums; }
-  .bar { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.12); border-radius: 999px; overflow: hidden; }
-  .bar > div { height: 100%; background: linear-gradient(90deg, var(--gold), var(--accent)); border-radius: 999px; }
+  .points { font-size: 24px; font-weight: 600; color: var(--highlight); min-width: 150px; font-variant-numeric: tabular-nums; }
+  .bar { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, var(--accent-dark), var(--highlight)); border-radius: 999px; }
   .hint { margin-top: 14px; font-size: 22px; color: var(--muted); }
 
   .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-  .answer { font-size: 56px; font-weight: 800; color: var(--good); margin: 6px 0 14px; }
-  .answer.none { color: var(--bad); }
+  .answer { font-size: 56px; font-weight: 800; color: var(--text); margin: 6px 0 14px; }
+  .answer.none { color: var(--muted); }
   .winner { font-size: 32px; font-weight: 600; }
-  .winner b { color: var(--accent); }
-  .winner .pts { color: var(--gold); }
+  .winner b { color: var(--highlight); }
+  .winner .pts { color: var(--highlight); }
 
   .title { font-size: 36px; font-weight: 800; margin: 0 0 16px; }
   .board { list-style: none; margin: 0; padding: 0; }
@@ -77,13 +66,17 @@
   .board li:nth-child(odd) { background: rgba(255, 255, 255, 0.05); }
   .board li.me { outline: 2px solid var(--accent); }
   .board .rank { width: 48px; font-weight: 800; color: var(--muted); }
-  .board li:first-child .rank { color: var(--gold); }
+  .board li:first-child .rank { color: var(--highlight); }
   .board .name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .board .score { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .board .score { font-weight: 800; color: var(--highlight); font-variant-numeric: tabular-nums; }
   .empty { font-size: 26px; color: var(--muted); }
 
-  .countdown { text-align: center; }
-  .countdown .big { font-size: 110px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .next {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 20px; padding-top: 18px;
+    border-top: 2px solid var(--accent-dark);
+  }
+  .next .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; }
 
   /* Testmodus */
   #testpanel {
@@ -96,7 +89,7 @@
   #testpanel input { font: inherit; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
   #testpanel input[name=user] { width: 140px; }
   #testpanel input[name=msg] { flex: 1; min-width: 160px; }
-  #testpanel button { font: inherit; padding: 8px 14px; border: 0; border-radius: 8px; background: #6b3fe0; color: #fff; cursor: pointer; }
+  #testpanel button { font: inherit; padding: 8px 14px; border: 0; border-radius: 8px; background: #b0101c; color: #fff; cursor: pointer; }
   #testpanel button.secondary { background: #e4e4ee; color: #222; }
   #testpanel .info { margin-top: 8px; color: #555; display: flex; gap: 16px; flex-wrap: wrap; }
 </style>
@@ -108,13 +101,11 @@
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
   channel: "flushedjulian", // Twitch-Kanal, z.B. "kanalname" (oder per ?channel= in der URL)
-  maxPoints: 100,       // Punkte bei sofortiger Antwort
-  minPoints: 10,         // Mindestpunkte
-  decaySeconds: 60,      // nach so vielen Sekunden gibt's nur noch minPoints
-  timeoutSeconds: 90,    // danach wird aufgelöst, wenn niemand es weiß
+  maxPoints: 100,        // Punkte bei sofortiger Antwort
+  minPoints: 10,         // Punkte kurz vor Ablauf der Zeit
+  questionSeconds: 90,   // Zeit pro Frage – danach wird übersprungen
   revealSeconds: 6,      // wie lange Antwort + Gewinner angezeigt werden
-  scoreboardSeconds: 8,  // wie lange das Scoreboard angezeigt wird
-  countdownSeconds: 10,  // Countdown bis zur nächsten Frage
+  countdownSeconds: 15,  // Scoreboard mit Countdown bis zur nächsten Frage
   scoreboardSize: 5,     // wie viele Plätze im Scoreboard
 };
 
@@ -178,15 +169,14 @@ function isCorrect(message, answers) {
 }
 
 function pointsAt(seconds) {
-  const { maxPoints, minPoints, decaySeconds } = CONFIG;
-  if (seconds >= decaySeconds) return minPoints;
-  return Math.round(maxPoints - (maxPoints - minPoints) * (seconds / decaySeconds));
+  const { maxPoints, minPoints, questionSeconds } = CONFIG;
+  const progress = Math.min(seconds / questionSeconds, 1);
+  return Math.round(maxPoints - (maxPoints - minPoints) * progress);
 }
 
 // ---------- Spielablauf ----------
 let phase = "idle";
 let order = [];
-let round = 0;
 let current = null;
 let startTime = 0;
 
@@ -242,15 +232,11 @@ function nextQuestion() {
   clearTimers();
   if (order.length === 0) order = shuffle(QUESTIONS);
   current = order.shift();
-  round++;
   phase = "question";
   startTime = performance.now();
 
   show(`
-    <div class="top">
-      <span class="badge">Frage ${round}</span>
-      <span class="timer" id="timer">00:00.0</span>
-    </div>
+    <div class="top"><span class="timer" id="timer">00:00.0</span></div>
     <div class="question">${escapeHtml(current.q)}</div>
     <div class="points-row">
       <span class="points" id="points">+${CONFIG.maxPoints} Punkte</span>
@@ -270,8 +256,8 @@ function tick() {
   const barEl = document.getElementById("bar");
   if (timerEl) timerEl.textContent = formatTime(elapsed);
   if (pointsEl) pointsEl.textContent = "+" + pointsAt(elapsed) + " Punkte";
-  if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.decaySeconds) * 100) + "%";
-  if (elapsed >= CONFIG.timeoutSeconds) reveal(null);
+  if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.questionSeconds) * 100) + "%";
+  if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
 function reveal(winner) {
@@ -288,7 +274,7 @@ function reveal(winner) {
     `);
   } else {
     show(`
-      <div class="label">Niemand wusste es – die Antwort war</div>
+      <div class="label">Zeit abgelaufen – die Antwort war</div>
       <div class="answer none">${answer}</div>
     `);
   }
@@ -310,17 +296,13 @@ function showScoreboard(highlightId) {
         </li>`).join("")}</ol>`
     : `<div class="empty">Noch keine Punkte vergeben.</div>`;
 
-  show(`<div class="title">🏆 Scoreboard</div>${rows}`);
-  later(showCountdown, CONFIG.scoreboardSeconds * 1000);
-}
-
-function showCountdown() {
-  phase = "countdown";
   let left = CONFIG.countdownSeconds;
   show(`
-    <div class="countdown">
-      <div class="label">Nächste Frage in</div>
-      <div class="big" id="cd">${left}</div>
+    <div class="title">🏆 Scoreboard</div>
+    ${rows}
+    <div class="next">
+      <span class="label">Nächste Frage in</span>
+      <span class="big" id="cd">${left}</span>
     </div>
   `);
   every(() => {
