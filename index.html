@@ -46,8 +46,6 @@
   }
   /* Menü zeigt die maximale Größe, damit man das Overlay in OBS sauber platzieren kann */
   .card.full { min-height: var(--max-card); }
-  .commands { margin-top: 28px; font-size: 22px; color: var(--muted); line-height: 1.7; }
-  .commands b { color: var(--text); font-weight: 600; }
   .card.hidden { opacity: 0; transform: translateY(40px); transition-timing-function: ease-in; }
 
   /* Kopfzeile mit "Nächste Frage in …" – bleibt stehen, während der Inhalt darunter wechselt */
@@ -472,10 +470,6 @@ function showMenu() {
   setBody(`
     <div class="title">🎮 Trivia – Modus wählen</div>
     <ul class="rows modes">${items}</ul>
-    <div class="commands">
-      <b>!trivia skip</b> Frage überspringen · <b>!trivia exit</b> zurück zum Menü<br>
-      <b>!trivia pause</b> / <b>resume</b> Pause · <b>!trivia stop</b> beenden (Punkte weg)
-    </div>
   `);
   updateTestInfo();
 }
