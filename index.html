@@ -64,9 +64,10 @@
   .content { transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
   .content.out { opacity: 0; transform: translateY(28px); transition-duration: 0.22s; transition-timing-function: ease-in; }
 
-  .top { display: flex; justify-content: flex-end; }
+  .bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 14px; }
+  .bottom .hint { margin-top: 0; }
   .timer { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 8px 0 18px; }
+  .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 0 0 18px; }
   .points-row { display: flex; align-items: center; gap: 16px; }
   .points { font-size: 24px; font-weight: 600; color: var(--highlight); min-width: 150px; font-variant-numeric: tabular-nums; }
   .bar { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 999px; overflow: hidden; }
@@ -153,7 +154,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-154213";
+const APP_VERSION = "20261006-155155";
 
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
@@ -162,11 +163,11 @@ const CONFIG = {
   minPoints: 10,            // Punkte kurz vor Ablauf der Zeit
   questionSeconds: 90,      // Zeit pro Frage – danach wird übersprungen
   countdownSeconds: 15,     // "Nächste Frage in …" nach der Auflösung
-  scoreboardAfterSeconds: 5, // so lange wird die Antwort gezeigt, dann wechselt es zum Scoreboard
-  scoreboardSize: 5,        // wie viele Plätze im Scoreboard
-  guessSeconds: 45,         // Schätzfragen: Zeit zum Tippen
+  scoreboardAfterSeconds: 5, // so lange wird die Antwort gezeigt, dann wechselt es zum Leaderboard
+  scoreboardSize: 5,        // wie viele Plätze im Leaderboard
+  guessSeconds: 30,         // Schätzfragen: Zeit zum Tippen
   guessCountdownSeconds: 15, // Schätzfragen: "Nächste Frage in …" nach der Auflösung
-  guessScoreboardAfterSeconds: 5, // Schätzfragen: so lange werden die Top 10 gezeigt, danach Scoreboard
+  guessScoreboardAfterSeconds: 5, // Schätzfragen: so lange werden die Top 10 gezeigt, danach Leaderboard
   guessPoints: [100, 80, 65, 55, 45, 35, 25, 20, 15, 10], // Punkte für Platz 1–10
 };
 
@@ -587,27 +588,31 @@ function showQuestion(elapsed) {
   setHead("");
   if (current.guess) {
     setBody(`
-      <div class="top"><span class="timer" id="timer">${formatCountdown(CONFIG.guessSeconds - elapsed)}</span></div>
       <div class="question">${escapeHtml(current.q)}</div>
       <div class="unit-badge">${escapeHtml(unitInfo(current.unit).label)}</div>
       <div class="points-row">
         <span class="points" id="guess-count">${tipCount()}</span>
         <div class="bar"><div id="bar" style="width:${Math.max(0, 100 - elapsed / CONFIG.guessSeconds * 100)}%"></div></div>
       </div>
-      <div class="hint">Schätz als Zahl im Chat!</div>
+      <div class="bottom">
+        <span class="hint">Schätze als Zahl im Chat!</span>
+        <span class="timer" id="timer">${formatCountdown(CONFIG.guessSeconds - elapsed)}</span>
+      </div>
     `);
     updateTestInfo();
     every(tick, 100);
     return;
   }
   setBody(`
-    <div class="top"><span class="timer" id="timer">00:00.0</span></div>
     ${questionHtml(current)}
     <div class="points-row">
       <span class="points" id="points">+${CONFIG.maxPoints} Punkte</span>
       <div class="bar"><div id="bar" style="width:100%"></div></div>
     </div>
-    <div class="hint">Schreib die Antwort in den Chat!</div>
+    <div class="bottom">
+      <span class="hint">Schreibe die Antwort in den Chat!</span>
+      <span class="timer" id="timer">00:00.0</span>
+    </div>
   `);
   updateTestInfo();
   every(tick, 100);
@@ -657,7 +662,7 @@ function tick() {
   if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
-// Auflösung + Countdown oben; nach scoreboardAfterSeconds wechselt der Inhalt zum Scoreboard
+// Auflösung + Countdown oben; nach scoreboardAfterSeconds wechselt der Inhalt zum Leaderboard
 function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   clearTimers();
   phase = "reveal";
@@ -674,7 +679,7 @@ function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   startNextCountdown(CONFIG.countdownSeconds, CONFIG.scoreboardAfterSeconds, () => showScoreboard(winner && winner.id));
 }
 
-// "Nächste Frage in …" oben; nach switchAfter Sekunden wechselt der Inhalt (zum Scoreboard)
+// "Nächste Frage in …" oben; nach switchAfter Sekunden wechselt der Inhalt (zum Leaderboard)
 function startNextCountdown(total, switchAfter, onSwitch) {
   let left = total;
   setHead(`<span class="label">Nächste Frage in</span><span class="big" id="cd">${left}</span>`);
@@ -739,7 +744,7 @@ function showScoreboard(highlightId) {
         </li>`).join("")}</ol>`
     : `<div class="empty">Noch keine Punkte vergeben.</div>`;
 
-  setBody(`<div class="title">🏆 Scoreboard</div>${rows}`);
+  setBody(`<div class="title">🏆 Leaderboard</div>${rows}`);
 }
 
 // ---------- Namensfarben ----------
