@@ -109,6 +109,11 @@
   .board.guesses li { font-size: 24px; padding: 6px 14px; }
   .board.guesses li + li { margin-top: 4px; }
   .board .tip { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .unit-badge {
+    display: inline-block; margin: -4px 0 20px; padding: 6px 16px;
+    font-size: 26px; font-weight: 800; color: var(--highlight);
+    border: 2px solid var(--highlight); border-radius: 12px;
+  }
   .guess-meta { margin: -4px 0 14px; font-size: 20px; color: var(--muted); }
 
   .modes li {
@@ -305,6 +310,22 @@ function parseGuess(text) {
   else if (/^(mio|million)/.test(suffix)) value *= 1e6;
   else if (/^(mrd|milliard)/.test(suffix)) value *= 1e9;
   return Number.isFinite(value) ? value : null;
+}
+
+// Wie die Einheit im Overlay erscheint: Hinweis unter der Frage + Anhang an Zahlen
+const UNIT_NAMES = {
+  "m": "Metern", "km": "Kilometern", "cm": "Zentimetern", "kg": "Kilogramm", "g": "Gramm", "t": "Tonnen",
+  "liter": "Litern", "l": "Litern", "m/s": "Metern pro Sekunde", "km/h": "Kilometern pro Stunde", "°c": "Grad Celsius",
+  "sekunden": "Sekunden", "minuten": "Minuten", "stunden": "Stunden", "tage": "Tagen", "jahre": "Jahren",
+  "mio. km": "Millionen Kilometern",
+};
+
+function unitInfo(unit) {
+  const u = (unit || "").trim();
+  if (u.toLowerCase() === "jahr") return { label: "Angabe: Jahreszahl", suffix: "" };
+  const name = UNIT_NAMES[u.toLowerCase()];
+  if (name) return { label: "Angabe in " + name, suffix: " " + u };
+  return { label: u ? "Angabe: Anzahl " + u : "Angabe: Zahl", suffix: u ? " " + u : "" };
 }
 
 function formatNumber(n) {
@@ -553,15 +574,15 @@ function showQuestion(elapsed) {
 
   setHead("");
   if (current.guess) {
-    const unit = current.unit ? ` (in ${escapeHtml(current.unit)})` : "";
     setBody(`
       <div class="top"><span class="timer" id="timer">${formatCountdown(CONFIG.guessSeconds - elapsed)}</span></div>
       <div class="question">${escapeHtml(current.q)}</div>
+      <div class="unit-badge">${escapeHtml(unitInfo(current.unit).label)}</div>
       <div class="points-row">
         <span class="points" id="guess-count">${tipCount()}</span>
         <div class="bar"><div id="bar" style="width:${Math.max(0, 100 - elapsed / CONFIG.guessSeconds * 100)}%"></div></div>
       </div>
-      <div class="hint">Schätz als Zahl im Chat${unit}! Nur dein erster Tipp zählt – die 10 Nächsten bekommen Punkte.</div>
+      <div class="hint">Schätz als Zahl im Chat!</div>
     `);
     updateTestInfo();
     every(tick, 100);
@@ -672,7 +693,7 @@ function revealGuess() {
   });
   if (ranked.length) saveScores();
 
-  const unit = current.unit ? " " + escapeHtml(current.unit) : "";
+  const unit = escapeHtml(unitInfo(current.unit).suffix);
   const list = ranked.length
     ? `<div class="guess-meta">Die ${ranked.length} Nächsten von ${tipCount()}</div>
        <ol class="rows board guesses">${ranked.map((r, i) => `
@@ -855,7 +876,7 @@ function updateTestInfo() {
   if (!TEST) return;
   const sol = document.getElementById("solution");
   const status = document.getElementById("status");
-  if (sol) sol.textContent = !current ? "" : "Lösung: " + (current.guess ? formatNumber(current.value) + " " + current.unit : current.a.join(" / "));
+  if (sol) sol.textContent = !current ? "" : "Lösung: " + (current.guess ? formatNumber(current.value) + unitInfo(current.unit).suffix : current.a.join(" / "));
   if (status) status.textContent = "Twitch: " + (CHANNEL ? connectionStatus : "kein ?channel= angegeben");
 }
 

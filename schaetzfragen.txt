@@ -1,5 +1,7 @@
 # Schätzfragen – eine Frage pro Zeile:
-#   Frage | richtige Zahl | Einheit (optional)
+#   Frage | richtige Zahl | Einheit
+# Einheiten: m, km, kg, g, t, Liter, m/s, km/h, °C, Sekunden, Minuten, Tage, Jahre, Jahr (= Jahreszahl)
+# oder ein Zählwort wie Teams, Folgen, Felder (wird als „Anzahl“ angezeigt).
 # Zahlen ohne Tausenderpunkte schreiben, Kommazahlen mit Komma (z.B. 149,6).
 # Die 10 Leute, die am nächsten dran sind, bekommen Punkte. Zeilen mit # am Anfang werden ignoriert.
 
@@ -7,26 +9,26 @@ Wie weit ist der Mond im Durchschnitt von der Erde entfernt? | 384400 | km
 Wie hoch ist der Eiffelturm mit Antennen? | 330 | m
 Wie hoch ist der Mount Everest? | 8849 | m
 Wie lang ist die Chinesische Mauer mit allen Abschnitten? | 21196 | km
-In welchem Jahr wurde der Eiffelturm fertiggestellt? | 1889
-Wie viele Tasten hat ein normales Klavier? | 88
+In welchem Jahr wurde der Eiffelturm fertiggestellt? | 1889 | Jahr
+Wie viele Tasten hat ein normales Klavier? | 88 | Tasten
 Wie lang ist der Rhein? | 1233 | km
 Wie schnell breitet sich Schall in der Luft aus? | 343 | m/s
 Wie heiß ist die Oberfläche der Sonne ungefähr? | 5500 | °C
 Wie alt wurde Wolfgang Amadeus Mozart? | 35 | Jahre
 Wie hoch ist die Zugspitze? | 2962 | m
-In welchem Jahr sank die Titanic? | 1912
+In welchem Jahr sank die Titanic? | 1912 | Jahr
 Wie viele Sekunden hat ein Tag? | 86400 | Sekunden
 Wie lang ist der Äquator? | 40075 | km
 Wie tief ist der Marianengraben an seiner tiefsten Stelle ungefähr? | 10994 | m
 Wie viele Mannschaften nahmen an der Fußball-WM 2026 teil? | 48 | Teams
 Wie lang ist ein Fußballfeld für internationale Spiele laut FIFA-Empfehlung? | 105 | m
 Wie viele Liter Blut hat ein erwachsener Mensch ungefähr? | 5 | Liter
-In welchem Jahr kam das erste iPhone heraus? | 2007
-In welchem Jahr wurde YouTube gegründet? | 2005
-In welchem Jahr ging Twitch online? | 2011
-In welchem Jahr erschien die Vollversion von Minecraft? | 2011
+In welchem Jahr kam das erste iPhone heraus? | 2007 | Jahr
+In welchem Jahr wurde YouTube gegründet? | 2005 | Jahr
+In welchem Jahr ging Twitch online? | 2011 | Jahr
+In welchem Jahr erschien die Vollversion von Minecraft? | 2011 | Jahr
 Wie viele Pokémon gab es in der allerersten Generation? | 151 | Pokémon
-In welchem Jahr erschien das erste „Super Mario Bros.“? | 1985
+In welchem Jahr erschien das erste „Super Mario Bros.“? | 1985 | Jahr
 Wie viele Erdtage dauert ein Jahr auf dem Mars? | 687 | Tage
 Wie hoch ist der Burj Khalifa in Dubai? | 828 | m
 Wie lang ist die Golden Gate Bridge insgesamt? | 2737 | m
@@ -37,7 +39,7 @@ Wie viele Buchstaben hat das deutsche Alphabet ohne Ä, Ö, Ü und ß? | 26 | Bu
 Wie weit ist die Sonne von der Erde entfernt (in Millionen Kilometern)? | 149,6 | Mio. km
 Wie viele Liter Wasser passen in ein olympisches Schwimmbecken? | 2500000 | Liter
 Wie hoch ist die Freiheitsstatue mit Sockel? | 93 | m
-In welchem Jahr lief die erste Folge der Simpsons? | 1989
+In welchem Jahr lief die erste Folge der Simpsons? | 1989 | Jahr
 Wie viele Folgen hat die Serie „Friends“? | 236 | Folgen
 Wie alt wurde Elvis Presley? | 42 | Jahre
 Wie viele Minuten braucht das Sonnenlicht bis zur Erde (gerundet)? | 8 | Minuten
