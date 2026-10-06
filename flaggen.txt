@@ -2,24 +2,202 @@
 #   Ländercode | Name | weiterer erlaubter Name | ...
 # Ländercodes (2 Buchstaben): https://flagicons.lipis.dev
 # Der erste Name wird im Stream angezeigt. Zeilen mit # am Anfang werden ignoriert.
+# Enthalten: alle 193 UN-Mitglieder plus Kosovo, Palästina, Taiwan und Vatikanstadt.
 
-de | Deutschland
-fr | Frankreich
-it | Italien
-es | Spanien
-gb | Großbritannien | Vereinigtes Königreich | UK
-us | USA | Vereinigte Staaten | Amerika
-jp | Japan
-br | Brasilien
-ca | Kanada
-ch | Schweiz
-at | Österreich
-nl | Niederlande | Holland
-se | Schweden
-tr | Türkei
-kr | Südkorea | Korea
-mx | Mexiko
-gr | Griechenland
-ie | Irland
-pt | Portugal
+af | Afghanistan
+eg | Ägypten
+al | Albanien
+dz | Algerien
+ad | Andorra
+ao | Angola
+ag | Antigua und Barbuda
+gq | Äquatorialguinea
+ar | Argentinien
+am | Armenien
+az | Aserbaidschan
+et | Äthiopien
 au | Australien
+bs | Bahamas
+bh | Bahrain
+bd | Bangladesch
+bb | Barbados
+by | Belarus | Weißrussland
+be | Belgien
+bz | Belize
+bj | Benin
+bt | Bhutan
+bo | Bolivien
+ba | Bosnien und Herzegowina | Bosnien
+bw | Botswana
+br | Brasilien
+bn | Brunei
+bg | Bulgarien
+bf | Burkina Faso
+bi | Burundi
+cl | Chile
+cn | China
+cr | Costa Rica
+dk | Dänemark
+cd | Demokratische Republik Kongo | DR Kongo | Kongo
+de | Deutschland
+dm | Dominica
+do | Dominikanische Republik
+dj | Dschibuti
+ec | Ecuador
+sv | El Salvador
+ci | Elfenbeinküste | Côte d'Ivoire
+er | Eritrea
+ee | Estland
+sz | Eswatini | Swasiland
+fj | Fidschi
+fi | Finnland
+fr | Frankreich
+ga | Gabun
+gm | Gambia
+ge | Georgien
+gh | Ghana
+gd | Grenada
+gr | Griechenland
+gb | Großbritannien | Vereinigtes Königreich | UK
+gt | Guatemala
+gn | Guinea
+gw | Guinea-Bissau
+gy | Guyana
+ht | Haiti
+hn | Honduras
+in | Indien
+id | Indonesien
+iq | Irak
+ir | Iran
+ie | Irland
+is | Island
+il | Israel
+it | Italien
+jm | Jamaika
+jp | Japan
+ye | Jemen
+jo | Jordanien
+kh | Kambodscha
+cm | Kamerun
+ca | Kanada
+cv | Kap Verde
+kz | Kasachstan
+qa | Katar
+ke | Kenia
+kg | Kirgisistan
+ki | Kiribati
+co | Kolumbien
+km | Komoren
+cg | Republik Kongo | Kongo
+xk | Kosovo
+hr | Kroatien
+cu | Kuba
+kw | Kuwait
+la | Laos
+ls | Lesotho
+lv | Lettland
+lb | Libanon
+lr | Liberia
+ly | Libyen
+li | Liechtenstein
+lt | Litauen
+lu | Luxemburg
+mg | Madagaskar
+mw | Malawi
+my | Malaysia
+mv | Malediven
+ml | Mali
+mt | Malta
+ma | Marokko
+mh | Marshallinseln
+mr | Mauretanien
+mu | Mauritius
+mx | Mexiko
+fm | Mikronesien
+md | Moldau | Moldawien | Republik Moldau
+mc | Monaco
+mn | Mongolei
+me | Montenegro
+mz | Mosambik
+mm | Myanmar | Birma
+na | Namibia
+nr | Nauru
+np | Nepal
+nz | Neuseeland
+ni | Nicaragua
+nl | Niederlande | Holland
+ne | Niger
+ng | Nigeria
+kp | Nordkorea
+mk | Nordmazedonien | Mazedonien
+no | Norwegen
+om | Oman
+at | Österreich
+tl | Osttimor | Timor-Leste
+pk | Pakistan
+ps | Palästina
+pw | Palau
+pa | Panama
+pg | Papua-Neuguinea
+py | Paraguay
+pe | Peru
+ph | Philippinen
+pl | Polen
+pt | Portugal
+rw | Ruanda
+ro | Rumänien
+ru | Russland
+sb | Salomonen
+zm | Sambia
+ws | Samoa
+sm | San Marino
+st | São Tomé und Príncipe | Sao Tome und Principe
+sa | Saudi-Arabien
+se | Schweden
+ch | Schweiz
+sn | Senegal
+rs | Serbien
+sc | Seychellen
+sl | Sierra Leone
+zw | Simbabwe
+sg | Singapur
+sk | Slowakei
+si | Slowenien
+so | Somalia
+es | Spanien
+lk | Sri Lanka
+kn | St. Kitts und Nevis
+lc | St. Lucia
+vc | St. Vincent und die Grenadinen
+za | Südafrika
+sd | Sudan
+kr | Südkorea | Korea
+ss | Südsudan
+sr | Suriname
+sy | Syrien
+tj | Tadschikistan
+tw | Taiwan
+tz | Tansania
+th | Thailand
+tg | Togo
+to | Tonga
+tt | Trinidad und Tobago
+td | Tschad
+cz | Tschechien
+tn | Tunesien
+tr | Türkei
+tm | Turkmenistan
+tv | Tuvalu
+ug | Uganda
+ua | Ukraine
+hu | Ungarn
+uy | Uruguay
+us | USA | Vereinigte Staaten | Amerika
+uz | Usbekistan
+vu | Vanuatu
+va | Vatikanstadt | Vatikan
+ve | Venezuela
+ae | Vereinigte Arabische Emirate | VAE | Emirate
+vn | Vietnam
+cf | Zentralafrikanische Republik
+cy | Zypern
