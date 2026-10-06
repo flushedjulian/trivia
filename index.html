@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trivia Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --card-bg: rgba(14, 14, 24, 0.88);
+    --text: #f4f4f8;
+    --muted: #a9a9c0;
+    --accent: #9b6bff;
+    --good: #3ddc84;
+    --bad: #ff6b6b;
+    --gold: #ffd166;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: transparent; /* transparent für OBS */
+    color: var(--text);
+    font-family: "Outfit", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body.test { background: #2b2d42; }
+
+  #stage {
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+  }
+  .card {
+    width: min(900px, 92vw);
+    background: var(--card-bg);
+    border: 3px solid var(--accent);
+    border-radius: 28px;
+    padding: 28px 36px 32px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .card.hidden { opacity: 0; transform: translateY(-16px) scale(0.98); }
+
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .badge {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .timer { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 22px 0 18px; }
+  .points-row { display: flex; align-items: center; gap: 16px; }
+  .points { font-size: 24px; font-weight: 600; color: var(--gold); min-width: 150px; font-variant-numeric: tabular-nums; }
+  .bar { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.12); border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, var(--gold), var(--accent)); border-radius: 999px; }
+  .hint { margin-top: 14px; font-size: 22px; color: var(--muted); }
+
+  .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .answer { font-size: 56px; font-weight: 800; color: var(--good); margin: 6px 0 14px; }
+  .answer.none { color: var(--bad); }
+  .winner { font-size: 32px; font-weight: 600; }
+  .winner b { color: var(--accent); }
+  .winner .pts { color: var(--gold); }
+
+  .title { font-size: 36px; font-weight: 800; margin: 0 0 16px; }
+  .board { list-style: none; margin: 0; padding: 0; }
+  .board li {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 30px; padding: 10px 16px; border-radius: 14px;
+  }
+  .board li:nth-child(odd) { background: rgba(255, 255, 255, 0.05); }
+  .board li.me { outline: 2px solid var(--accent); }
+  .board .rank { width: 48px; font-weight: 800; color: var(--muted); }
+  .board li:first-child .rank { color: var(--gold); }
+  .board .name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board .score { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .empty { font-size: 26px; color: var(--muted); }
+
+  .countdown { text-align: center; }
+  .countdown .big { font-size: 110px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* Testmodus */
+  #testpanel {
+    position: fixed; left: 16px; right: 16px; bottom: 16px;
+    max-width: 900px; margin: 0 auto;
+    background: #fff; color: #222; border-radius: 14px; padding: 14px;
+    font-size: 15px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  }
+  #testpanel form { display: flex; gap: 8px; flex-wrap: wrap; }
+  #testpanel input { font: inherit; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+  #testpanel input[name=user] { width: 140px; }
+  #testpanel input[name=msg] { flex: 1; min-width: 160px; }
+  #testpanel button { font: inherit; padding: 8px 14px; border: 0; border-radius: 8px; background: #6b3fe0; color: #fff; cursor: pointer; }
+  #testpanel button.secondary { background: #e4e4ee; color: #222; }
+  #testpanel .info { margin-top: 8px; color: #555; display: flex; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="stage"><div class="card" id="card"></div></div>
+
+<script>
+// ================== EINSTELLUNGEN ==================
+const CONFIG = {
+  channel: "flushedjulian", // Twitch-Kanal, z.B. "kanalname" (oder per ?channel= in der URL)
+  maxPoints: 100,       // Punkte bei sofortiger Antwort
+  minPoints: 10,         // Mindestpunkte
+  decaySeconds: 60,      // nach so vielen Sekunden gibt's nur noch minPoints
+  timeoutSeconds: 90,    // danach wird aufgelöst, wenn niemand es weiß
+  revealSeconds: 6,      // wie lange Antwort + Gewinner angezeigt werden
+  scoreboardSeconds: 8,  // wie lange das Scoreboard angezeigt wird
+  countdownSeconds: 10,  // Countdown bis zur nächsten Frage
+  scoreboardSize: 5,     // wie viele Plätze im Scoreboard
+};
+
+// Erste Antwort wird angezeigt, weitere werden auch akzeptiert.
+const QUESTIONS = [
+  { q: "Wie heißt die Hauptstadt von Frankreich?", a: ["Paris"] },
+  { q: "Wie viele Beine hat eine Spinne?", a: ["8", "acht"] },
+  { q: "Welche Farbe entsteht, wenn man Blau und Gelb mischt?", a: ["Grün"] },
+  { q: "Wie heißt der größte Planet in unserem Sonnensystem?", a: ["Jupiter"] },
+  { q: "Wie viele Minuten hat eine Stunde?", a: ["60", "sechzig"] },
+];
+// ===================================================
+
+const params = new URLSearchParams(location.search);
+const CHANNEL = (params.get("channel") || CONFIG.channel || "").trim().toLowerCase().replace(/^#/, "");
+const TEST = params.has("test");
+const STORAGE_KEY = "trivia-scores-" + (CHANNEL || "test");
+
+const card = document.getElementById("card");
+
+// ---------- Punkte speichern ----------
+let scores = {};
+try { scores = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { scores = {}; }
+function saveScores() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch {}
+}
+
+// ---------- Antworten prüfen ----------
+function normalize(s) {
+  return s.toLowerCase()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ").trim()
+    .replace(/^(der|die|das|ein|eine) /, "");
+}
+
+function levenshtein(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return row[b.length];
+}
+
+function isCorrect(message, answers) {
+  const msg = normalize(message);
+  return answers.some(answer => {
+    const a = normalize(answer);
+    if (msg === a) return true;
+    if (/^\d+$/.test(a)) return false; // Zahlen müssen exakt stimmen
+    const tolerance = a.length >= 9 ? 2 : a.length >= 5 ? 1 : 0;
+    return levenshtein(msg, a) <= tolerance;
+  });
+}
+
+function pointsAt(seconds) {
+  const { maxPoints, minPoints, decaySeconds } = CONFIG;
+  if (seconds >= decaySeconds) return minPoints;
+  return Math.round(maxPoints - (maxPoints - minPoints) * (seconds / decaySeconds));
+}
+
+// ---------- Spielablauf ----------
+let phase = "idle";
+let order = [];
+let round = 0;
+let current = null;
+let startTime = 0;
+
+// Alle laufenden Timer merken, damit !trivia stop sie sauber abbrechen kann
+let timers = [];
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+function every(fn, ms) { const id = setInterval(fn, ms); timers.push(id); return id; }
+function clearTimers() {
+  timers.forEach(id => { clearTimeout(id); clearInterval(id); });
+  timers = [];
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function show(html) {
+  card.classList.add("hidden");
+  later(() => {
+    card.innerHTML = html;
+    card.classList.remove("hidden");
+  }, 350);
+}
+
+function startGame() {
+  if (phase !== "idle" && phase !== "stopped") return; // läuft schon
+  nextQuestion();
+}
+
+function stopGame() {
+  clearTimers();
+  phase = "stopped";
+  card.classList.add("hidden");
+  updateTestInfo();
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds - m * 60;
+  return String(m).padStart(2, "0") + ":" + s.toFixed(1).padStart(4, "0");
+}
+
+function nextQuestion() {
+  clearTimers();
+  if (order.length === 0) order = shuffle(QUESTIONS);
+  current = order.shift();
+  round++;
+  phase = "question";
+  startTime = performance.now();
+
+  show(`
+    <div class="top">
+      <span class="badge">Frage ${round}</span>
+      <span class="timer" id="timer">00:00.0</span>
+    </div>
+    <div class="question">${escapeHtml(current.q)}</div>
+    <div class="points-row">
+      <span class="points" id="points">+${CONFIG.maxPoints} Punkte</span>
+      <div class="bar"><div id="bar" style="width:100%"></div></div>
+    </div>
+    <div class="hint">Schreib die Antwort in den Chat!</div>
+  `);
+  updateTestInfo();
+  every(tick, 100);
+}
+
+function tick() {
+  if (phase !== "question") return;
+  const elapsed = (performance.now() - startTime) / 1000;
+  const timerEl = document.getElementById("timer");
+  const pointsEl = document.getElementById("points");
+  const barEl = document.getElementById("bar");
+  if (timerEl) timerEl.textContent = formatTime(elapsed);
+  if (pointsEl) pointsEl.textContent = "+" + pointsAt(elapsed) + " Punkte";
+  if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.decaySeconds) * 100) + "%";
+  if (elapsed >= CONFIG.timeoutSeconds) reveal(null);
+}
+
+function reveal(winner) {
+  phase = "reveal";
+  clearTimers();
+  const answer = escapeHtml(current.a[0]);
+
+  if (winner) {
+    show(`
+      <div class="label">Richtige Antwort</div>
+      <div class="answer">${answer}</div>
+      <div class="winner"><b>${escapeHtml(winner.name)}</b> nach ${winner.seconds.toFixed(1)} s
+        · <span class="pts">+${winner.points} Punkte</span></div>
+    `);
+  } else {
+    show(`
+      <div class="label">Niemand wusste es – die Antwort war</div>
+      <div class="answer none">${answer}</div>
+    `);
+  }
+  later(() => showScoreboard(winner && winner.id), CONFIG.revealSeconds * 1000);
+}
+
+function showScoreboard(highlightId) {
+  phase = "scoreboard";
+  const top = Object.entries(scores)
+    .sort((a, b) => b[1].points - a[1].points)
+    .slice(0, CONFIG.scoreboardSize);
+
+  const rows = top.length
+    ? `<ol class="board">${top.map(([id, s], i) => `
+        <li class="${id === highlightId ? "me" : ""}">
+          <span class="rank">#${i + 1}</span>
+          <span class="name">${escapeHtml(s.name)}</span>
+          <span class="score">${s.points}</span>
+        </li>`).join("")}</ol>`
+    : `<div class="empty">Noch keine Punkte vergeben.</div>`;
+
+  show(`<div class="title">🏆 Scoreboard</div>${rows}`);
+  later(showCountdown, CONFIG.scoreboardSeconds * 1000);
+}
+
+function showCountdown() {
+  phase = "countdown";
+  let left = CONFIG.countdownSeconds;
+  show(`
+    <div class="countdown">
+      <div class="label">Nächste Frage in</div>
+      <div class="big" id="cd">${left}</div>
+    </div>
+  `);
+  every(() => {
+    left--;
+    const el = document.getElementById("cd");
+    if (el) el.textContent = left;
+    if (left <= 0) nextQuestion();
+  }, 1000);
+}
+
+// ---------- Chat-Nachrichten verarbeiten ----------
+function onChatMessage(id, name, text, isMod) {
+  const command = text.trim().toLowerCase().replace(/\s+/g, " ");
+  if (command.startsWith("!trivia ")) {
+    if (!isMod) return; // nur Streamer und Mods
+    if (command === "!trivia start") startGame();
+    if (command === "!trivia stop") stopGame();
+    return;
+  }
+
+  if (phase !== "question") return;
+  if (!isCorrect(text, current.a)) return;
+
+  const seconds = (performance.now() - startTime) / 1000;
+  const points = pointsAt(seconds);
+  if (!scores[id]) scores[id] = { name, points: 0 };
+  scores[id].name = name;
+  scores[id].points += points;
+  saveScores();
+  reveal({ id, name, seconds, points });
+}
+
+// ---------- Twitch-Chat (anonym, nur lesen) ----------
+let connectionStatus = "nicht verbunden";
+
+function connectTwitch() {
+  const ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+
+  ws.onopen = () => {
+    ws.send("CAP REQ :twitch.tv/tags");
+    ws.send("PASS SCHMOOPIIE");
+    ws.send("NICK justinfan" + Math.floor(10000 + Math.random() * 80000));
+    ws.send("JOIN #" + CHANNEL);
+  };
+
+  ws.onmessage = event => {
+    for (const line of event.data.split("\r\n")) {
+      if (!line) continue;
+      if (line.startsWith("PING")) { ws.send("PONG :tmi.twitch.tv"); continue; }
+      if (line.includes(" JOIN #" + CHANNEL)) setStatus("verbunden mit #" + CHANNEL);
+
+      const match = line.match(/^(?:@(\S+) )?:(\w+)!\S+ PRIVMSG #\S+ :(.*)$/);
+      if (!match) continue;
+      const [, rawTags, login, text] = match;
+      const tags = Object.fromEntries((rawTags || "").split(";").map(t => t.split("=")));
+      const badges = tags["badges"] || "";
+      const isMod = tags["mod"] === "1" || badges.includes("broadcaster/");
+      onChatMessage(login, tags["display-name"] || login, text, isMod);
+    }
+  };
+
+  ws.onclose = () => {
+    setStatus("getrennt – neuer Versuch in 3 s");
+    setTimeout(connectTwitch, 3000);
+  };
+}
+
+function setStatus(text) {
+  connectionStatus = text;
+  updateTestInfo();
+}
+
+// ---------- Testmodus ----------
+function setupTestPanel() {
+  document.body.classList.add("test");
+  const panel = document.createElement("div");
+  panel.id = "testpanel";
+  panel.innerHTML = `
+    <form id="fakechat">
+      <input name="user" value="TestUser" placeholder="Name">
+      <input name="msg" placeholder="Chatnachricht simulieren…" autocomplete="off">
+      <button type="submit">Senden</button>
+      <button type="button" class="secondary" id="reset">Punkte zurücksetzen</button>
+    </form>
+    <div class="info"><span id="solution"></span><span id="status"></span></div>
+  `;
+  document.body.appendChild(panel);
+
+  panel.querySelector("#fakechat").addEventListener("submit", e => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.user.value.trim() || "TestUser";
+    onChatMessage(name.toLowerCase(), name, form.msg.value, true); // im Test zählt man als Mod
+    form.msg.value = "";
+  });
+  panel.querySelector("#reset").addEventListener("click", () => {
+    scores = {};
+    saveScores();
+  });
+}
+
+function updateTestInfo() {
+  if (!TEST) return;
+  const sol = document.getElementById("solution");
+  const status = document.getElementById("status");
+  if (sol) sol.textContent = current ? "Lösung: " + current.a.join(" / ") : "";
+  if (status) status.textContent = "Twitch: " + (CHANNEL ? connectionStatus : "kein ?channel= angegeben");
+}
+
+// ---------- Start ----------
+if (TEST) setupTestPanel();
+if (CHANNEL) connectTwitch();
+
+if (!CHANNEL && !TEST) {
+  show(`
+    <div class="title">Trivia Overlay</div>
+    <div class="hint">Bitte <b>?channel=kanalname</b> an die URL hängen (oder <b>?test</b> zum Ausprobieren).</div>
+  `);
+} else {
+  nextQuestion();
+}
+</script>
+</body>
+</html>
