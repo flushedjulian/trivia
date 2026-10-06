@@ -247,7 +247,9 @@ function numberWords(n) {
   return words;
 }
 
-function isCorrect(message, answers) {
+// blocked: alle Antworten der anderen Fragen im Modus. Wer genau so eine schreibt (z.B. "Irland"
+// bei der Frage nach Island), bekommt keinen Treffer über die Tippfehler-Toleranz.
+function isCorrect(message, answers, blocked = new Set()) {
   const msg = normalize(message);
   const compact = normalizeChars(message).replace(/ /g, ""); // "neun und achtzig" → "neunundachtzig"
   return answers.some(answer => {
@@ -255,6 +257,7 @@ function isCorrect(message, answers) {
     if (msg === a) return true;
     if (/^\d+$/.test(a)) {
       // Zahlen: Ziffern müssen exakt stimmen, ausgeschrieben sind kleine Tippfehler erlaubt
+      if (blocked.has(msg)) return false;
       const n = Number(a);
       if (n > 9999) return false;
       return numberWords(n).some(word => {
@@ -262,9 +265,17 @@ function isCorrect(message, answers) {
         return compact === w || levenshtein(compact, w) <= (w.length >= 9 ? 2 : w.length >= 5 ? 1 : 0);
       });
     }
+    if (blocked.has(msg)) return false;
     const tolerance = a.length >= 9 ? 2 : a.length >= 5 ? 1 : 0;
     return levenshtein(msg, a) <= tolerance;
   });
+}
+
+// Alle Antworten eines Modus als Set (gecacht pro geladener Fragenliste)
+const answerSets = new WeakMap();
+function answersOf(questions) {
+  if (!answerSets.has(questions)) answerSets.set(questions, new Set(questions.flatMap(q => q.a.map(normalize))));
+  return answerSets.get(questions);
 }
 
 function pointsAt(seconds) {
@@ -641,7 +652,7 @@ function onChatMessage({ id, name, text, canControl, color }) {
   }
 
   if (phase !== "question") return;
-  if (!isCorrect(text, current.a)) return;
+  if (!isCorrect(text, current.a, answersOf(mode.questions))) return;
 
   const seconds = (performance.now() - startTime) / 1000;
   const points = pointsAt(seconds);

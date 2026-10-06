@@ -6,7 +6,6 @@ Banane
 Schmetterling
 Computer
 Geburtstag
-Kartoffel
 Elefant
 Schokolade
 Regenbogen
@@ -74,7 +73,6 @@ Rakete
 Hubschrauber
 Motorrad
 Traktor
-Ampel
 Sonne
 Mond
 Stern

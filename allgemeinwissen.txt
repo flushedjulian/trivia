@@ -7,7 +7,6 @@ Wie viele Beine hat eine Spinne? | 8 | acht
 Welche Farbe entsteht, wenn man Blau und Gelb mischt? | Grün
 Wie heißt der größte Planet in unserem Sonnensystem? | Jupiter
 Wie viele Minuten hat eine Stunde? | 60 | sechzig
-Wie viele Kontinente gibt es? | 7 | sieben
 Welches ist das größte Tier der Welt? | Blauwal
 Wie viele Spieler einer Fußballmannschaft stehen auf dem Platz? | 11 | elf
 In welchem Land stehen die Pyramiden von Gizeh? | Ägypten
@@ -54,7 +53,7 @@ Wie viele Zentimeter hat ein Meter? | 100 | hundert
 Wie viele Gramm hat ein Kilogramm? | 1000 | tausend
 Wie viele Monate im Jahr haben 31 Tage? | 7 | sieben
 Was ist das chemische Symbol für Gold? | Au
-Welches Gas brauchen Menschen zum Atmen? | Sauerstoff
+Welches Gas brauchen Menschen zum Atmen? | Sauerstoff | O2
 Bei wie viel Grad Celsius kocht Wasser auf Meereshöhe? | 100
 Bei wie viel Grad Celsius gefriert Wasser? | 0 | null
 Welches ist das größte Organ des Menschen? | Haut
@@ -64,11 +63,11 @@ Welches Organ pumpt das Blut durch den Körper? | Herz
 Welches ist das schnellste Landtier? | Gepard
 Welches ist das größte Landtier? | Elefant | Afrikanischer Elefant
 Wie nennt man ein Pferdebaby? | Fohlen
-Wie nennt man ein männliches Huhn? | Hahn
-Welches Tier ist das Wappentier Deutschlands? | Adler
+Wie nennt man ein männliches Huhn? | Hahn | Gockel
+Welches Tier ist das Wappentier Deutschlands? | Adler | Bundesadler
 Wovon ernähren sich Pandas hauptsächlich? | Bambus
 Welcher Vogel kann rückwärts fliegen? | Kolibri
-Welches Säugetier kann fliegen? | Fledermaus
+Welches Säugetier kann fliegen? | Fledermaus | Flughund
 Wer malte die Mona Lisa? | Leonardo da Vinci | da Vinci | Leonardo
 Wer schrieb „Faust“? | Goethe | Johann Wolfgang von Goethe
 Wer komponierte die „Ode an die Freude“ (9. Sinfonie)? | Beethoven | Ludwig van Beethoven
@@ -76,7 +75,6 @@ Wer schrieb „Romeo und Julia“? | Shakespeare | William Shakespeare
 Wer entwickelte die Relativitätstheorie? | Einstein | Albert Einstein
 Wer betrat als erster Mensch den Mond? | Neil Armstrong | Armstrong
 In welchem Jahr fiel die Berliner Mauer? | 1989
-In welchem Jahr endete der Zweite Weltkrieg? | 1945
 In welchem Jahr wurde Deutschland wiedervereinigt? | 1990
 In welchem Jahr landete der erste Mensch auf dem Mond? | 1969
 Wer war der erste Bundeskanzler der Bundesrepublik Deutschland? | Konrad Adenauer | Adenauer
