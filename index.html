@@ -188,7 +188,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-155740";
+const APP_VERSION = "20261006-160310";
 
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
@@ -385,7 +385,6 @@ function pointsAt(seconds) {
 let phase = "idle"; // idle | menu | loading | question | reveal | scoreboard | stopped
 let mode = null;
 let modeNr = null;
-let order = [];
 let current = null;
 let startTime = 0;
 let wordState = null;
@@ -522,7 +521,6 @@ function stopGame() {
   phase = "stopped";
   paused = null;
   current = null;
-  order = [];
   scores = {};
   saveScores();
   card.classList.add("hidden");
@@ -550,7 +548,7 @@ async function selectMode(nr) {
   }
   mode = m;
   modeNr = nr;
-  order = [];
+  m.loadedAt = Date.now();
   nextQuestion();
 }
 
@@ -592,16 +590,44 @@ function questionHtml(item) {
   return `<div class="question">${escapeHtml(item.q)}</div>`;
 }
 
+// ---------- Gedächtnis für gestellte Fragen ----------
+// Pro Modus wird gespeichert, welche Fragen schon dran waren (bleibt auch nach Neuladen/OBS-Neustart).
+// Eine Frage kommt erst wieder, wenn alle anderen einmal gestellt wurden.
+function questionKey(q) { return q.q || q.flag || q.word || ""; }
+function askedStorageKey() { return "trivia-asked-" + (CHANNEL || "test") + "-" + modeNr; }
+
+function loadAsked() {
+  try { return new Set(JSON.parse(localStorage.getItem(askedStorageKey())) || []); } catch { return new Set(); }
+}
+function saveAsked(asked) {
+  try { localStorage.setItem(askedStorageKey(), JSON.stringify([...asked])); } catch {}
+}
+
+function pickQuestion(previous) {
+  const asked = loadAsked();
+  let pool = mode.questions.filter(q => !asked.has(questionKey(q)));
+  if (pool.length === 0) {
+    // alle durch: von vorne, aber nicht direkt die gleiche Frage nochmal
+    asked.clear();
+    pool = mode.questions.filter(q => !previous || questionKey(q) !== questionKey(previous));
+    if (pool.length === 0) pool = mode.questions;
+  }
+  const q = pool[Math.floor(Math.random() * pool.length)];
+  asked.add(questionKey(q));
+  saveAsked(asked);
+  return q;
+}
+
 function nextQuestion() {
   if (updateReady && reloadForUpdate({ kind: "mode", nr: modeNr })) return;
   clearTimers();
-  if (order.length === 0) {
-    order = shuffle(mode.questions);
-    // im Hintergrund neu laden, damit neu eingetragene Fragen in der nächsten Runde dabei sind
-    const m = mode;
+  // Fragenliste ab und zu im Hintergrund neu laden, damit neu eingetragene Fragen dabei sind
+  const m = mode;
+  if (!m.loadedAt || Date.now() - m.loadedAt > 2 * 60 * 1000) {
+    m.loadedAt = Date.now();
     loadQuestions(m).then(q => { if (q.length) m.questions = q; }).catch(() => {});
   }
-  current = order.shift();
+  current = pickQuestion(current);
   guesses = new Map();
 
   wordState = null;
