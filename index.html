@@ -16,6 +16,7 @@
     --highlight: #ff3b47;    /* helles Rot: Punkte, Countdown */
     --row: rgba(255, 255, 255, 0.07);      /* Zeilen in Listen */
     --row-alt: rgba(255, 255, 255, 0.035); /* jede zweite Zeile, etwas dunkler */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
   * { box-sizing: border-box; }
   html, body {
@@ -39,20 +40,25 @@
     border-radius: 28px;
     padding: 28px 36px 32px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(176, 16, 28, 0.25);
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
   }
-  .card.hidden { opacity: 0; transform: translateY(-16px) scale(0.98); }
+  .card.hidden { opacity: 0; transform: translateY(40px); transition-timing-function: ease-in; }
 
   /* Kopfzeile mit "Nächste Frage in …" – bleibt stehen, während der Inhalt darunter wechselt */
   .head {
     display: flex; justify-content: space-between; align-items: center;
+    max-height: 120px; overflow: hidden;
     padding-bottom: 16px; margin-bottom: 20px;
     border-bottom: 2px solid var(--accent-dark);
+    transition: max-height 0.4s var(--ease), opacity 0.4s var(--ease),
+      padding 0.4s var(--ease), margin 0.4s var(--ease), border-color 0.4s var(--ease);
   }
-  .head.off { display: none; }
+  .head.off { max-height: 0; opacity: 0; padding-bottom: 0; margin-bottom: 0; border-color: transparent; }
   .head .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; }
-  .body { transition: opacity 0.3s ease; }
-  .body.hidden { opacity: 0; }
+  /* Höhe passt sich weich an; Inhalt fährt nach unten raus und von unten wieder rein */
+  .body { overflow: hidden; margin: 0 -10px; padding: 0 10px; transition: height 0.4s var(--ease); }
+  .content { transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
+  .content.out { opacity: 0; transform: translateY(28px); transition-duration: 0.22s; transition-timing-function: ease-in; }
 
   .top { display: flex; justify-content: flex-end; }
   .timer { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -64,7 +70,8 @@
   .hint { margin-top: 14px; font-size: 22px; color: var(--muted); }
 
   .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-  .answer { font-size: 56px; font-weight: 800; color: #fff; margin: 6px 0 14px; }
+  .answer { font-size: 56px; font-weight: 800; color: #fff; margin: 6px 0 14px; display: flex; align-items: center; gap: 20px; }
+  .flag-small { height: 52px; border-radius: 6px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6); }
   .winner { font-size: 32px; font-weight: 600; }
   .winner .pts { color: var(--highlight); }
 
@@ -74,15 +81,17 @@
   }
 
   /* Wort erkennen: ein Feld pro Buchstabe */
-  .slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 24px; }
+  .word-row { display: flex; align-items: flex-end; gap: 28px; margin: 12px 0 24px; }
+  .slots { display: flex; flex-wrap: wrap; gap: 10px; }
+  .count { font-size: 24px; font-weight: 600; color: var(--muted); white-space: nowrap; padding-bottom: 6px; }
   .slot {
-    width: 52px; height: 66px;
+    width: var(--slot, 52px); height: calc(var(--slot, 52px) * 1.27);
     display: flex; align-items: flex-end; justify-content: center;
     border-bottom: 4px solid var(--muted);
-    font-size: 50px; font-weight: 800; line-height: 1; color: var(--highlight);
+    font-size: calc(var(--slot, 52px) * 0.96); font-weight: 800; line-height: 1; color: var(--highlight);
   }
   .slot.open { border-color: var(--highlight); }
-  .slot.space { border: 0; width: 26px; }
+  .slot.space { border: 0; width: calc(var(--slot, 52px) / 2); }
 
   .title { font-size: 36px; font-weight: 800; margin: 0 0 16px; }
   .rows { list-style: none; margin: 0; padding: 0; }
@@ -91,7 +100,7 @@
   .rows li + li { margin-top: 6px; }
 
   .board li { display: flex; align-items: center; gap: 18px; font-size: 30px; }
-  .board li.me { outline: 2px solid var(--accent); }
+  .board li.me { outline: 2px solid var(--accent); outline-offset: -2px; }
   .board .rank { width: 48px; font-weight: 800; color: var(--muted); }
   .board li:first-child .rank { color: var(--highlight); }
   .board .name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -125,7 +134,7 @@
 <div id="stage">
   <div class="card hidden" id="card">
     <div class="head off" id="head"></div>
-    <div class="body" id="body"></div>
+    <div class="body" id="body"><div class="content out" id="content"></div></div>
   </div>
 </div>
 
@@ -158,6 +167,7 @@ const STORAGE_KEY = "trivia-scores-" + (CHANNEL || "test");
 const card = document.getElementById("card");
 const headEl = document.getElementById("head");
 const bodyEl = document.getElementById("body");
+const contentEl = document.getElementById("content");
 
 // ---------- Punkte speichern ----------
 let scores = {};
@@ -251,20 +261,37 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// Kopfzeile ein-/ausblenden (ohne Animation, damit der Countdown stehen bleibt)
+// Kopfzeile weich ein-/ausklappen (beim Ausklappen bleibt der alte Inhalt stehen, bis sie zu ist)
 function setHead(html) {
-  headEl.innerHTML = html;
+  if (html) headEl.innerHTML = html;
   headEl.classList.toggle("off", !html);
 }
 
-// Inhalt mit kurzem Überblenden austauschen
+// Inhalt tauschen: alter Inhalt fährt nach unten raus, neuer fährt von unten rein,
+// die Karte passt ihre Höhe dabei weich an
+const EXIT_MS = 220;
+const ENTER_MS = 400;
+let bodyToken = 0;
+
 function setBody(html) {
+  const token = ++bodyToken;
+  const firstShow = card.classList.contains("hidden");
   card.classList.remove("hidden");
-  bodyEl.classList.add("hidden");
-  later(() => {
-    bodyEl.innerHTML = html;
-    bodyEl.classList.remove("hidden");
-  }, 300);
+  const startHeight = bodyEl.offsetHeight;
+  bodyEl.style.height = startHeight + "px";
+  contentEl.classList.add("out");
+
+  setTimeout(() => {
+    if (token !== bodyToken) return; // inzwischen schon wieder neuer Inhalt
+    contentEl.innerHTML = html;
+    bodyEl.style.height = "auto";
+    const targetHeight = bodyEl.offsetHeight;
+    bodyEl.style.height = startHeight + "px";
+    void bodyEl.offsetHeight; // Layout erzwingen, damit die Höhe animiert
+    bodyEl.style.height = targetHeight + "px";
+    contentEl.classList.remove("out");
+    setTimeout(() => { if (token === bodyToken) bodyEl.style.height = "auto"; }, ENTER_MS);
+  }, firstShow ? 0 : EXIT_MS);
 }
 
 // !trivia start → Modus-Menü
@@ -295,6 +322,7 @@ function showMenu() {
 
 function stopGame() {
   clearTimers();
+  bodyToken++; // laufenden Inhaltswechsel abbrechen
   phase = "stopped";
   card.classList.add("hidden");
   updateTestInfo();
@@ -336,19 +364,28 @@ function formatTime(seconds) {
   return String(m).padStart(2, "0") + ":" + s.toFixed(1).padStart(4, "0");
 }
 
+function flagUrl(code) {
+  return "https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/" + encodeURIComponent(code) + ".svg";
+}
+
 function questionHtml(item) {
   if (item.flag) {
     return `
       <div class="question">Welches Land hat diese Flagge?</div>
-      <img class="flag" src="https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${encodeURIComponent(item.flag)}.svg" alt="">`;
+      <img class="flag" src="${flagUrl(item.flag)}" alt="">`;
   }
   if (item.word) {
+    // Felder bei langen Wörtern schmaler machen, damit alles in eine Zeile passt (Platz neben "x Buchstaben")
+    const slotSize = Math.max(28, Math.min(52, Math.floor(620 / wordState.letters.length) - 10));
     const slots = wordState.letters.map((ch, i) => ch === " "
       ? `<span class="slot space"></span>`
       : `<span class="slot" id="slot-${i}"></span>`).join("");
     return `
       <div class="question">Welches Wort ist das?</div>
-      <div class="slots">${slots}</div>`;
+      <div class="word-row">
+        <div class="slots" style="--slot:${slotSize}px">${slots}</div>
+        <span class="count">${wordState.revealOrder.length} Buchstaben</span>
+      </div>`;
   }
   return `<div class="question">${escapeHtml(item.q)}</div>`;
 }
@@ -417,7 +454,9 @@ function tick() {
 function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   clearTimers();
   phase = "reveal";
-  const answer = escapeHtml(current.a[0]);
+  const answer = current.flag
+    ? `<img class="flag-small" src="${flagUrl(current.flag)}" alt="">${escapeHtml(current.a[0])}`
+    : escapeHtml(current.a[0]);
   let left = CONFIG.countdownSeconds;
 
   setHead(`<span class="label">Nächste Frage in</span><span class="big" id="cd">${left}</span>`);
