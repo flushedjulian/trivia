@@ -152,6 +152,9 @@
 </div>
 
 <script>
+// Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
+const APP_VERSION = "20261006-154213";
+
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
   channel: "flushedjulian", // Twitch-Kanal (oder per ?channel= in der URL)
@@ -345,6 +348,7 @@ function pointsAt(seconds) {
 // ---------- Spielablauf ----------
 let phase = "idle"; // idle | menu | loading | question | reveal | scoreboard | stopped
 let mode = null;
+let modeNr = null;
 let order = [];
 let current = null;
 let startTime = 0;
@@ -509,6 +513,7 @@ async function selectMode(nr) {
     return;
   }
   mode = m;
+  modeNr = nr;
   order = [];
   nextQuestion();
 }
@@ -552,6 +557,7 @@ function questionHtml(item) {
 }
 
 function nextQuestion() {
+  if (updateReady && reloadForUpdate({ kind: "mode", nr: modeNr })) return;
   clearTimers();
   if (order.length === 0) {
     order = shuffle(mode.questions);
@@ -886,18 +892,61 @@ function updateTestInfo() {
   if (status) status.textContent = "Twitch: " + (CHANNEL ? connectionStatus : "kein ?channel= angegeben");
 }
 
+// ---------- Automatische Aktualisierung ----------
+// Schaut jede Minute in version.txt. Gibt es eine neue Version, lädt sich das Overlay neu:
+// sofort, wenn kein Spiel läuft, sonst zwischen zwei Fragen – und macht danach im selben Modus weiter.
+let updateReady = null;
+
+async function checkForUpdate() {
+  try {
+    const res = await fetch("version.txt?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return;
+    const latest = (await res.text()).trim();
+    if (!latest || latest === APP_VERSION) return;
+    if (sessionStorage.getItem("trivia-update-tried") === latest) return; // nicht in einer Schleife neu laden
+    updateReady = latest;
+    if (phase === "idle" || phase === "stopped") reloadForUpdate(null);
+    else if (phase === "menu") reloadForUpdate({ kind: "menu" });
+  } catch {}
+}
+
+function reloadForUpdate(resume) {
+  try {
+    sessionStorage.setItem("trivia-update-tried", updateReady);
+    if (resume) sessionStorage.setItem("trivia-resume", JSON.stringify({ ...resume, t: Date.now() }));
+  } catch {}
+  const url = new URL(location.href);
+  url.searchParams.set("_v", updateReady); // neue Adresse = garantiert frisch geladen, kein alter Zwischenspeicher
+  location.replace(url.toString());
+  return true;
+}
+
+function resumeAfterUpdate() {
+  let state = null;
+  try {
+    state = JSON.parse(sessionStorage.getItem("trivia-resume"));
+    sessionStorage.removeItem("trivia-resume");
+  } catch {}
+  if (!state || Date.now() - state.t > 2 * 60 * 1000) return false;
+  if (state.kind === "menu") { showMenu(); return true; }
+  if (state.kind === "mode" && MODES[state.nr]) { phase = "menu"; selectMode(state.nr); return true; }
+  return false;
+}
+
 // ---------- Start ----------
 if (TEST) setupTestPanel();
 if (CHANNEL) connectTwitch();
 loadConfig();
 setInterval(loadConfig, 60 * 1000);
+setInterval(checkForUpdate, 60 * 1000);
+const resumed = resumeAfterUpdate();
 
 if (!CHANNEL && !TEST) {
   setBody(`
     <div class="title">Trivia Overlay</div>
     <div class="hint">Bitte <b>?channel=kanalname</b> an die URL hängen (oder <b>?test</b> zum Ausprobieren).</div>
   `);
-} else if (TEST) {
+} else if (TEST && !resumed) {
   startGame(); // im Test direkt das Menü zeigen; im Stream bleibt das Overlay bis "!trivia start" unsichtbar
 }
 </script>
