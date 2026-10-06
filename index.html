@@ -51,8 +51,25 @@
   .hint { margin-top: 14px; font-size: 22px; color: var(--muted); }
 
   .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-  .answer { font-size: 56px; font-weight: 800; color: var(--text); margin: 6px 0 14px; }
-  .answer.none { color: var(--muted); }
+  .answer { font-size: 56px; font-weight: 800; color: #fff; margin: 6px 0 14px; }
+
+  .flag {
+    display: block; height: 220px; max-width: 100%; margin: 8px 0 22px;
+    border-radius: 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  }
+  .scramble {
+    font-size: 64px; font-weight: 800; letter-spacing: 0.25em;
+    color: var(--highlight); margin: 4px 0 22px; word-break: break-all;
+  }
+
+  .modes { list-style: none; margin: 0 0 6px; padding: 0; }
+  .modes li {
+    display: grid; grid-template-columns: max-content 1fr; align-items: center; gap: 24px;
+    font-size: 32px; font-weight: 600; padding: 12px 16px; border-radius: 14px;
+  }
+  .modes li:nth-child(odd) { background: rgba(255, 255, 255, 0.05); }
+  .modes .cmd { color: var(--highlight); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .modes li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
   .winner { font-size: 32px; font-weight: 600; }
   .winner b { color: var(--highlight); }
   .winner .pts { color: var(--highlight); }
@@ -95,28 +112,74 @@
 </style>
 </head>
 <body>
-<div id="stage"><div class="card" id="card"></div></div>
+<div id="stage"><div class="card hidden" id="card"></div></div>
 
 <script>
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
-  channel: "letshugotv", // Twitch-Kanal, z.B. "kanalname" (oder per ?channel= in der URL)
+  channel: "flushedjulian", // Twitch-Kanal, z.B. "kanalname" (oder per ?channel= in der URL)
   maxPoints: 100,        // Punkte bei sofortiger Antwort
   minPoints: 10,         // Punkte kurz vor Ablauf der Zeit
   questionSeconds: 90,   // Zeit pro Frage – danach wird übersprungen
   revealSeconds: 6,      // wie lange Antwort + Gewinner angezeigt werden
-  countdownSeconds: 15,  // Scoreboard mit Countdown bis zur nächsten Frage
+  countdownSeconds: 10,  // Scoreboard mit Countdown bis zur nächsten Frage
   scoreboardSize: 5,     // wie viele Plätze im Scoreboard
 };
 
-// Erste Antwort wird angezeigt, weitere werden auch akzeptiert.
-const QUESTIONS = [
-  { q: "Wie heißt die Hauptstadt von Frankreich?", a: ["Paris"] },
-  { q: "Wie viele Beine hat eine Spinne?", a: ["8", "acht"] },
-  { q: "Welche Farbe entsteht, wenn man Blau und Gelb mischt?", a: ["Grün"] },
-  { q: "Wie heißt der größte Planet in unserem Sonnensystem?", a: ["Jupiter"] },
-  { q: "Wie viele Minuten hat eine Stunde?", a: ["60", "sechzig"] },
-];
+// Modi – Auswahl im Chat mit "!trivia #1", "!trivia #2", …
+// Bei jeder Frage wird die erste Antwort angezeigt, weitere werden auch akzeptiert.
+const MODES = {
+  1: {
+    name: "Allgemeinwissen",
+    questions: [
+      { q: "Wie heißt die Hauptstadt von Frankreich?", a: ["Paris"] },
+      { q: "Wie viele Beine hat eine Spinne?", a: ["8", "acht"] },
+      { q: "Welche Farbe entsteht, wenn man Blau und Gelb mischt?", a: ["Grün"] },
+      { q: "Wie heißt der größte Planet in unserem Sonnensystem?", a: ["Jupiter"] },
+      { q: "Wie viele Minuten hat eine Stunde?", a: ["60", "sechzig"] },
+      { q: "Wie viele Kontinente gibt es?", a: ["7", "sieben"] },
+      { q: "Welches ist das größte Tier der Welt?", a: ["Blauwal"] },
+      { q: "Wie viele Spieler einer Fußballmannschaft stehen auf dem Platz?", a: ["11", "elf"] },
+      { q: "In welchem Land stehen die Pyramiden von Gizeh?", a: ["Ägypten"] },
+      { q: "Wie lautet die chemische Formel für Wasser?", a: ["H2O"] },
+    ],
+  },
+  2: {
+    name: "Flaggen",
+    // Ländercode → Flaggenbild
+    questions: [
+      { flag: "de", a: ["Deutschland"] },
+      { flag: "fr", a: ["Frankreich"] },
+      { flag: "it", a: ["Italien"] },
+      { flag: "es", a: ["Spanien"] },
+      { flag: "gb", a: ["Großbritannien", "Vereinigtes Königreich", "UK"] },
+      { flag: "us", a: ["USA", "Vereinigte Staaten", "Amerika"] },
+      { flag: "jp", a: ["Japan"] },
+      { flag: "br", a: ["Brasilien"] },
+      { flag: "ca", a: ["Kanada"] },
+      { flag: "ch", a: ["Schweiz"] },
+      { flag: "at", a: ["Österreich"] },
+      { flag: "nl", a: ["Niederlande", "Holland"] },
+      { flag: "se", a: ["Schweden"] },
+      { flag: "tr", a: ["Türkei"] },
+      { flag: "kr", a: ["Südkorea", "Korea"] },
+      { flag: "mx", a: ["Mexiko"] },
+      { flag: "gr", a: ["Griechenland"] },
+      { flag: "ie", a: ["Irland"] },
+      { flag: "pt", a: ["Portugal"] },
+      { flag: "au", a: ["Australien"] },
+    ],
+  },
+  3: {
+    name: "Wort erkennen",
+    // Buchstaben werden durcheinandergewürfelt
+    questions: [
+      "Banane", "Schmetterling", "Computer", "Geburtstag", "Kartoffel", "Elefant",
+      "Schokolade", "Regenbogen", "Telefon", "Flugzeug", "Erdbeere", "Bibliothek",
+      "Tastatur", "Streamer", "Subathon",
+    ].map(word => ({ word, a: [word] })),
+  },
+};
 // ===================================================
 
 const params = new URLSearchParams(location.search);
@@ -176,6 +239,7 @@ function pointsAt(seconds) {
 
 // ---------- Spielablauf ----------
 let phase = "idle";
+let mode = null;
 let order = [];
 let current = null;
 let startTime = 0;
@@ -210,9 +274,47 @@ function show(html) {
   }, 350);
 }
 
+// !trivia start → Modus-Menü anzeigen
 function startGame() {
   if (phase !== "idle" && phase !== "stopped") return; // läuft schon
+  clearTimers();
+  phase = "menu";
+  const items = Object.entries(MODES).map(([nr, m]) => `
+    <li><span class="cmd">!trivia #${nr}</span><span>${escapeHtml(m.name)}</span></li>`).join("");
+  show(`
+    <div class="title">🎮 Trivia – Modus wählen</div>
+    <ul class="modes">${items}</ul>
+  `);
+  updateTestInfo();
+}
+
+// !trivia #1, #2, … → Modus wählen (auch während des Spiels zum Wechseln)
+function selectMode(nr) {
+  if (!MODES[nr] || phase === "idle" || phase === "stopped") return;
+  mode = MODES[nr];
+  order = [];
   nextQuestion();
+}
+
+function scrambleWord(word) {
+  const letters = word.toUpperCase().split("");
+  let result = word.toUpperCase();
+  for (let i = 0; i < 20 && result === word.toUpperCase(); i++) result = shuffle(letters).join("");
+  return result;
+}
+
+function questionHtml(item) {
+  if (item.flag) {
+    return `
+      <div class="question">Welches Land hat diese Flagge?</div>
+      <img class="flag" src="https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${item.flag}.svg" alt="">`;
+  }
+  if (item.word) {
+    return `
+      <div class="question">Welches Wort ist das?</div>
+      <div class="scramble">${escapeHtml(scrambleWord(item.word))}</div>`;
+  }
+  return `<div class="question">${escapeHtml(item.q)}</div>`;
 }
 
 function stopGame() {
@@ -236,14 +338,14 @@ function formatTime(seconds) {
 
 function nextQuestion() {
   clearTimers();
-  if (order.length === 0) order = shuffle(QUESTIONS);
+  if (order.length === 0) order = shuffle(mode.questions);
   current = order.shift();
   phase = "question";
   startTime = performance.now();
 
   show(`
     <div class="top"><span class="timer" id="timer">00:00.0</span></div>
-    <div class="question">${escapeHtml(current.q)}</div>
+    ${questionHtml(current)}
     <div class="points-row">
       <span class="points" id="points">+${CONFIG.maxPoints} Punkte</span>
       <div class="bar"><div id="bar" style="width:100%"></div></div>
@@ -281,7 +383,7 @@ function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   } else {
     show(`
       <div class="label">${noWinnerLabel}</div>
-      <div class="answer none">${answer}</div>
+      <div class="answer">${answer}</div>
     `);
   }
   later(() => showScoreboard(winner && winner.id), CONFIG.revealSeconds * 1000);
@@ -360,6 +462,8 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (command === "!trivia start") startGame();
     if (command === "!trivia stop") stopGame();
     if (command === "!trivia skip") skipQuestion();
+    const modeMatch = command.match(/^!trivia #?(\d+)$/); // "!trivia #1" (oder "!trivia 1")
+    if (modeMatch) selectMode(modeMatch[1]);
     return;
   }
 
@@ -466,8 +570,8 @@ if (!CHANNEL && !TEST) {
     <div class="title">Trivia Overlay</div>
     <div class="hint">Bitte <b>?channel=kanalname</b> an die URL hängen (oder <b>?test</b> zum Ausprobieren).</div>
   `);
-} else {
-  nextQuestion();
+} else if (TEST) {
+  startGame(); // im Test direkt das Menü zeigen; im Stream bleibt das Overlay bis "!trivia start" unsichtbar
 }
 </script>
 </body>
