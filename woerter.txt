@@ -1,0 +1,19 @@
+# Wort erkennen – ein Wort pro Zeile.
+# Am Anfang sieht man nur Striche (_ _ _ _), mit der Zeit werden zufällige Buchstaben aufgedeckt.
+# Zeilen mit # am Anfang werden ignoriert.
+
+Banane
+Schmetterling
+Computer
+Geburtstag
+Kartoffel
+Elefant
+Schokolade
+Regenbogen
+Telefon
+Flugzeug
+Erdbeere
+Bibliothek
+Tastatur
+Streamer
+Subathon

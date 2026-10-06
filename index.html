@@ -13,7 +13,9 @@
     --muted: #a88d8f;
     --accent: #b0101c;       /* dunkelrot: Rahmen, Balken */
     --accent-dark: #5c060d;
-    --highlight: #ff3b47;    /* helles Rot: Punkte, Namen, Countdown */
+    --highlight: #ff3b47;    /* helles Rot: Punkte, Countdown */
+    --row: rgba(255, 255, 255, 0.07);      /* Zeilen in Listen */
+    --row-alt: rgba(255, 255, 255, 0.035); /* jede zweite Zeile, etwas dunkler */
   }
   * { box-sizing: border-box; }
   html, body {
@@ -41,6 +43,17 @@
   }
   .card.hidden { opacity: 0; transform: translateY(-16px) scale(0.98); }
 
+  /* Kopfzeile mit "Nächste Frage in …" – bleibt stehen, während der Inhalt darunter wechselt */
+  .head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 16px; margin-bottom: 20px;
+    border-bottom: 2px solid var(--accent-dark);
+  }
+  .head.off { display: none; }
+  .head .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  .body { transition: opacity 0.3s ease; }
+  .body.hidden { opacity: 0; }
+
   .top { display: flex; justify-content: flex-end; }
   .timer { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
   .question { font-size: 44px; font-weight: 800; line-height: 1.2; margin: 8px 0 18px; }
@@ -52,35 +65,32 @@
 
   .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
   .answer { font-size: 56px; font-weight: 800; color: #fff; margin: 6px 0 14px; }
+  .winner { font-size: 32px; font-weight: 600; }
+  .winner .pts { color: var(--highlight); }
 
   .flag {
     display: block; height: 220px; max-width: 100%; margin: 8px 0 22px;
     border-radius: 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
   }
-  .scramble {
-    font-size: 64px; font-weight: 800; letter-spacing: 0.25em;
-    color: var(--highlight); margin: 4px 0 22px; word-break: break-all;
-  }
 
-  .modes { list-style: none; margin: 0 0 6px; padding: 0; }
-  .modes li {
-    display: grid; grid-template-columns: max-content 1fr; align-items: center; gap: 24px;
-    font-size: 32px; font-weight: 600; padding: 12px 16px; border-radius: 14px;
+  /* Wort erkennen: ein Feld pro Buchstabe */
+  .slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 24px; }
+  .slot {
+    width: 52px; height: 66px;
+    display: flex; align-items: flex-end; justify-content: center;
+    border-bottom: 4px solid var(--muted);
+    font-size: 50px; font-weight: 800; line-height: 1; color: var(--highlight);
   }
-  .modes li:nth-child(odd) { background: rgba(255, 255, 255, 0.05); }
-  .modes .cmd { color: var(--highlight); font-weight: 800; font-variant-numeric: tabular-nums; }
-  .modes li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
-  .winner { font-size: 32px; font-weight: 600; }
-  .winner b { color: var(--highlight); }
-  .winner .pts { color: var(--highlight); }
+  .slot.open { border-color: var(--highlight); }
+  .slot.space { border: 0; width: 26px; }
 
   .title { font-size: 36px; font-weight: 800; margin: 0 0 16px; }
-  .board { list-style: none; margin: 0; padding: 0; }
-  .board li {
-    display: flex; align-items: center; gap: 18px;
-    font-size: 30px; padding: 10px 16px; border-radius: 14px;
-  }
-  .board li:nth-child(odd) { background: rgba(255, 255, 255, 0.05); }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { padding: 10px 16px; border-radius: 14px; background: var(--row); }
+  .rows li:nth-child(even) { background: var(--row-alt); }
+  .rows li + li { margin-top: 6px; }
+
+  .board li { display: flex; align-items: center; gap: 18px; font-size: 30px; }
   .board li.me { outline: 2px solid var(--accent); }
   .board .rank { width: 48px; font-weight: 800; color: var(--muted); }
   .board li:first-child .rank { color: var(--highlight); }
@@ -88,12 +98,12 @@
   .board .score { font-weight: 800; color: var(--highlight); font-variant-numeric: tabular-nums; }
   .empty { font-size: 26px; color: var(--muted); }
 
-  .next {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 20px; padding-top: 18px;
-    border-top: 2px solid var(--accent-dark);
+  .modes li {
+    display: grid; grid-template-columns: max-content 1fr; align-items: center; gap: 24px;
+    font-size: 32px; font-weight: 600; padding: 12px 16px;
   }
-  .next .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  .modes .cmd { color: var(--highlight); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .modes li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 
   /* Testmodus */
   #testpanel {
@@ -112,73 +122,31 @@
 </style>
 </head>
 <body>
-<div id="stage"><div class="card hidden" id="card"></div></div>
+<div id="stage">
+  <div class="card hidden" id="card">
+    <div class="head off" id="head"></div>
+    <div class="body" id="body"></div>
+  </div>
+</div>
 
 <script>
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
-  channel: "flushedjulian", // Twitch-Kanal, z.B. "kanalname" (oder per ?channel= in der URL)
-  maxPoints: 100,        // Punkte bei sofortiger Antwort
-  minPoints: 10,         // Punkte kurz vor Ablauf der Zeit
-  questionSeconds: 90,   // Zeit pro Frage – danach wird übersprungen
-  revealSeconds: 6,      // wie lange Antwort + Gewinner angezeigt werden
-  countdownSeconds: 10,  // Scoreboard mit Countdown bis zur nächsten Frage
-  scoreboardSize: 5,     // wie viele Plätze im Scoreboard
+  channel: "flushedjulian", // Twitch-Kanal (oder per ?channel= in der URL)
+  maxPoints: 100,           // Punkte bei sofortiger Antwort
+  minPoints: 10,            // Punkte kurz vor Ablauf der Zeit
+  questionSeconds: 90,      // Zeit pro Frage – danach wird übersprungen
+  countdownSeconds: 10,     // "Nächste Frage in …" nach der Auflösung
+  scoreboardAtSeconds: 5,   // bei diesem Countdown-Stand wechselt es zum Scoreboard
+  scoreboardSize: 5,        // wie viele Plätze im Scoreboard
 };
 
 // Modi – Auswahl im Chat mit "!trivia #1", "!trivia #2", …
-// Bei jeder Frage wird die erste Antwort angezeigt, weitere werden auch akzeptiert.
+// Die Fragen stehen in den .txt-Dateien und werden bei jeder Modus-Wahl neu geladen.
 const MODES = {
-  1: {
-    name: "Allgemeinwissen",
-    questions: [
-      { q: "Wie heißt die Hauptstadt von Frankreich?", a: ["Paris"] },
-      { q: "Wie viele Beine hat eine Spinne?", a: ["8", "acht"] },
-      { q: "Welche Farbe entsteht, wenn man Blau und Gelb mischt?", a: ["Grün"] },
-      { q: "Wie heißt der größte Planet in unserem Sonnensystem?", a: ["Jupiter"] },
-      { q: "Wie viele Minuten hat eine Stunde?", a: ["60", "sechzig"] },
-      { q: "Wie viele Kontinente gibt es?", a: ["7", "sieben"] },
-      { q: "Welches ist das größte Tier der Welt?", a: ["Blauwal"] },
-      { q: "Wie viele Spieler einer Fußballmannschaft stehen auf dem Platz?", a: ["11", "elf"] },
-      { q: "In welchem Land stehen die Pyramiden von Gizeh?", a: ["Ägypten"] },
-      { q: "Wie lautet die chemische Formel für Wasser?", a: ["H2O"] },
-    ],
-  },
-  2: {
-    name: "Flaggen",
-    // Ländercode → Flaggenbild
-    questions: [
-      { flag: "de", a: ["Deutschland"] },
-      { flag: "fr", a: ["Frankreich"] },
-      { flag: "it", a: ["Italien"] },
-      { flag: "es", a: ["Spanien"] },
-      { flag: "gb", a: ["Großbritannien", "Vereinigtes Königreich", "UK"] },
-      { flag: "us", a: ["USA", "Vereinigte Staaten", "Amerika"] },
-      { flag: "jp", a: ["Japan"] },
-      { flag: "br", a: ["Brasilien"] },
-      { flag: "ca", a: ["Kanada"] },
-      { flag: "ch", a: ["Schweiz"] },
-      { flag: "at", a: ["Österreich"] },
-      { flag: "nl", a: ["Niederlande", "Holland"] },
-      { flag: "se", a: ["Schweden"] },
-      { flag: "tr", a: ["Türkei"] },
-      { flag: "kr", a: ["Südkorea", "Korea"] },
-      { flag: "mx", a: ["Mexiko"] },
-      { flag: "gr", a: ["Griechenland"] },
-      { flag: "ie", a: ["Irland"] },
-      { flag: "pt", a: ["Portugal"] },
-      { flag: "au", a: ["Australien"] },
-    ],
-  },
-  3: {
-    name: "Wort erkennen",
-    // Buchstaben werden durcheinandergewürfelt
-    questions: [
-      "Banane", "Schmetterling", "Computer", "Geburtstag", "Kartoffel", "Elefant",
-      "Schokolade", "Regenbogen", "Telefon", "Flugzeug", "Erdbeere", "Bibliothek",
-      "Tastatur", "Streamer", "Subathon",
-    ].map(word => ({ word, a: [word] })),
-  },
+  1: { name: "Allgemeinwissen", file: "allgemeinwissen.txt", parse: p => ({ q: p[0], a: p.slice(1) }), minParts: 2 },
+  2: { name: "Flaggen", file: "flaggen.txt", parse: p => ({ flag: p[0].toLowerCase(), a: p.slice(1) }), minParts: 2 },
+  3: { name: "Wort erkennen", file: "woerter.txt", parse: p => ({ word: p[0], a: p }), minParts: 1 },
 };
 // ===================================================
 
@@ -188,12 +156,27 @@ const TEST = params.has("test");
 const STORAGE_KEY = "trivia-scores-" + (CHANNEL || "test");
 
 const card = document.getElementById("card");
+const headEl = document.getElementById("head");
+const bodyEl = document.getElementById("body");
 
 // ---------- Punkte speichern ----------
 let scores = {};
 try { scores = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { scores = {}; }
 function saveScores() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch {}
+}
+
+// ---------- Fragen laden ----------
+async function loadQuestions(m) {
+  const res = await fetch(m.file + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error(m.file + ": " + res.status);
+  const text = await res.text();
+  return text.split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith("#"))
+    .map(line => line.split("|").map(part => part.trim()).filter(Boolean))
+    .filter(parts => parts.length >= m.minParts)
+    .map(m.parse);
 }
 
 // ---------- Antworten prüfen ----------
@@ -238,13 +221,15 @@ function pointsAt(seconds) {
 }
 
 // ---------- Spielablauf ----------
-let phase = "idle";
+let phase = "idle"; // idle | menu | loading | question | reveal | scoreboard | stopped
 let mode = null;
 let order = [];
 let current = null;
 let startTime = 0;
+let wordState = null;
+let loadToken = 0;
 
-// Alle laufenden Timer merken, damit !trivia stop sie sauber abbrechen kann
+// Alle laufenden Timer merken, damit Befehle sie sauber abbrechen können
 let timers = [];
 function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
 function every(fn, ms) { const id = setInterval(fn, ms); timers.push(id); return id; }
@@ -266,55 +251,46 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function show(html) {
-  card.classList.add("hidden");
-  later(() => {
-    card.innerHTML = html;
-    card.classList.remove("hidden");
-  }, 350);
+// Kopfzeile ein-/ausblenden (ohne Animation, damit der Countdown stehen bleibt)
+function setHead(html) {
+  headEl.innerHTML = html;
+  headEl.classList.toggle("off", !html);
 }
 
-// !trivia start → Modus-Menü anzeigen
+// Inhalt mit kurzem Überblenden austauschen
+function setBody(html) {
+  card.classList.remove("hidden");
+  bodyEl.classList.add("hidden");
+  later(() => {
+    bodyEl.innerHTML = html;
+    bodyEl.classList.remove("hidden");
+  }, 300);
+}
+
+// !trivia start → Modus-Menü
 function startGame() {
   if (phase !== "idle" && phase !== "stopped") return; // läuft schon
+  showMenu();
+}
+
+// !trivia exit → zurück zum Menü
+function exitToMenu() {
+  if (phase === "idle" || phase === "stopped" || phase === "menu") return;
+  showMenu();
+}
+
+function showMenu() {
   clearTimers();
   phase = "menu";
+  current = null;
   const items = Object.entries(MODES).map(([nr, m]) => `
     <li><span class="cmd">!trivia #${nr}</span><span>${escapeHtml(m.name)}</span></li>`).join("");
-  show(`
+  setHead("");
+  setBody(`
     <div class="title">🎮 Trivia – Modus wählen</div>
-    <ul class="modes">${items}</ul>
+    <ul class="rows modes">${items}</ul>
   `);
   updateTestInfo();
-}
-
-// !trivia #1, #2, … → Modus wählen (auch während des Spiels zum Wechseln)
-function selectMode(nr) {
-  if (!MODES[nr] || phase === "idle" || phase === "stopped") return;
-  mode = MODES[nr];
-  order = [];
-  nextQuestion();
-}
-
-function scrambleWord(word) {
-  const letters = word.toUpperCase().split("");
-  let result = word.toUpperCase();
-  for (let i = 0; i < 20 && result === word.toUpperCase(); i++) result = shuffle(letters).join("");
-  return result;
-}
-
-function questionHtml(item) {
-  if (item.flag) {
-    return `
-      <div class="question">Welches Land hat diese Flagge?</div>
-      <img class="flag" src="https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${item.flag}.svg" alt="">`;
-  }
-  if (item.word) {
-    return `
-      <div class="question">Welches Wort ist das?</div>
-      <div class="scramble">${escapeHtml(scrambleWord(item.word))}</div>`;
-  }
-  return `<div class="question">${escapeHtml(item.q)}</div>`;
 }
 
 function stopGame() {
@@ -324,7 +300,31 @@ function stopGame() {
   updateTestInfo();
 }
 
-// Während einer Frage: Antwort auflösen. Bei Auflösung/Scoreboard: direkt zur nächsten Frage.
+// !trivia #1, #2, … → Modus wählen (auch mitten im Spiel zum Wechseln)
+async function selectMode(nr) {
+  const m = MODES[nr];
+  if (!m || phase === "idle" || phase === "stopped") return;
+  clearTimers();
+  phase = "loading";
+  const token = ++loadToken;
+  try {
+    m.questions = await loadQuestions(m);
+  } catch {
+    m.questions = m.questions || [];
+  }
+  if (token !== loadToken || phase !== "loading") return; // inzwischen anderer Befehl
+  if (m.questions.length === 0) {
+    phase = "menu";
+    setHead("");
+    setBody(`<div class="title">Keine Fragen gefunden</div><div class="hint">${escapeHtml(m.file)} ist leer oder konnte nicht geladen werden.</div>`);
+    return;
+  }
+  mode = m;
+  order = [];
+  nextQuestion();
+}
+
+// Während einer Frage: Antwort auflösen. Nach der Auflösung: direkt zur nächsten Frage.
 function skipQuestion() {
   if (phase === "question") reveal(null, "Übersprungen – die Antwort war");
   else if (phase === "reveal" || phase === "scoreboard") nextQuestion();
@@ -336,14 +336,44 @@ function formatTime(seconds) {
   return String(m).padStart(2, "0") + ":" + s.toFixed(1).padStart(4, "0");
 }
 
+function questionHtml(item) {
+  if (item.flag) {
+    return `
+      <div class="question">Welches Land hat diese Flagge?</div>
+      <img class="flag" src="https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${encodeURIComponent(item.flag)}.svg" alt="">`;
+  }
+  if (item.word) {
+    const slots = wordState.letters.map((ch, i) => ch === " "
+      ? `<span class="slot space"></span>`
+      : `<span class="slot" id="slot-${i}"></span>`).join("");
+    return `
+      <div class="question">Welches Wort ist das?</div>
+      <div class="slots">${slots}</div>`;
+  }
+  return `<div class="question">${escapeHtml(item.q)}</div>`;
+}
+
 function nextQuestion() {
   clearTimers();
-  if (order.length === 0) order = shuffle(mode.questions);
+  if (order.length === 0) {
+    order = shuffle(mode.questions);
+    // im Hintergrund neu laden, damit neu eingetragene Fragen in der nächsten Runde dabei sind
+    const m = mode;
+    loadQuestions(m).then(q => { if (q.length) m.questions = q; }).catch(() => {});
+  }
   current = order.shift();
   phase = "question";
   startTime = performance.now();
 
-  show(`
+  wordState = null;
+  if (current.word) {
+    const letters = [...current.word.toUpperCase()];
+    const indices = letters.map((ch, i) => i).filter(i => letters[i] !== " ");
+    wordState = { letters, revealOrder: shuffle(indices), shown: 0 };
+  }
+
+  setHead("");
+  setBody(`
     <div class="top"><span class="timer" id="timer">00:00.0</span></div>
     ${questionHtml(current)}
     <div class="points-row">
@@ -356,6 +386,20 @@ function nextQuestion() {
   every(tick, 100);
 }
 
+// Wort erkennen: Buchstaben gleichmäßig über die Fragezeit aufdecken, der letzte bleibt verdeckt
+function revealLetters(elapsed) {
+  const n = wordState.revealOrder.length;
+  const target = Math.min(n - 1, Math.floor(elapsed / (CONFIG.questionSeconds / n)));
+  while (wordState.shown < target) {
+    const i = wordState.revealOrder[wordState.shown];
+    const slot = document.getElementById("slot-" + i);
+    if (!slot) return; // Inhalt noch nicht eingeblendet
+    slot.textContent = wordState.letters[i];
+    slot.classList.add("open");
+    wordState.shown++;
+  }
+}
+
 function tick() {
   if (phase !== "question") return;
   const elapsed = (performance.now() - startTime) / 1000;
@@ -365,28 +409,33 @@ function tick() {
   if (timerEl) timerEl.textContent = formatTime(elapsed);
   if (pointsEl) pointsEl.textContent = "+" + pointsAt(elapsed) + " Punkte";
   if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.questionSeconds) * 100) + "%";
+  if (wordState) revealLetters(elapsed);
   if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
+// Auflösung + Countdown oben; bei scoreboardAtSeconds wechselt der Inhalt zum Scoreboard
 function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
-  phase = "reveal";
   clearTimers();
+  phase = "reveal";
   const answer = escapeHtml(current.a[0]);
+  let left = CONFIG.countdownSeconds;
 
-  if (winner) {
-    show(`
-      <div class="label">Richtige Antwort</div>
-      <div class="answer">${answer}</div>
-      <div class="winner"><b style="color:${winner.color}">${escapeHtml(winner.name)}</b> nach ${winner.seconds.toFixed(1)} s
-        · <span class="pts">+${winner.points} Punkte</span></div>
-    `);
-  } else {
-    show(`
-      <div class="label">${noWinnerLabel}</div>
-      <div class="answer">${answer}</div>
-    `);
-  }
-  later(() => showScoreboard(winner && winner.id), CONFIG.revealSeconds * 1000);
+  setHead(`<span class="label">Nächste Frage in</span><span class="big" id="cd">${left}</span>`);
+  setBody(winner
+    ? `<div class="label">Richtige Antwort</div>
+       <div class="answer">${answer}</div>
+       <div class="winner"><b style="color:${winner.color}">${escapeHtml(winner.name)}</b> nach ${winner.seconds.toFixed(1)} s
+         · <span class="pts">+${winner.points} Punkte</span></div>`
+    : `<div class="label">${noWinnerLabel}</div>
+       <div class="answer">${answer}</div>`);
+
+  every(() => {
+    left--;
+    const cd = document.getElementById("cd");
+    if (cd) cd.textContent = left;
+    if (left === CONFIG.scoreboardAtSeconds) showScoreboard(winner && winner.id);
+    if (left <= 0) nextQuestion();
+  }, 1000);
 }
 
 function showScoreboard(highlightId) {
@@ -396,7 +445,7 @@ function showScoreboard(highlightId) {
     .slice(0, CONFIG.scoreboardSize);
 
   const rows = top.length
-    ? `<ol class="board">${top.map(([id, s], i) => `
+    ? `<ol class="rows board">${top.map(([id, s], i) => `
         <li class="${id === highlightId ? "me" : ""}">
           <span class="rank">#${i + 1}</span>
           <span class="name" style="color:${nameColor(id, s.color)}">${escapeHtml(s.name)}</span>
@@ -404,21 +453,7 @@ function showScoreboard(highlightId) {
         </li>`).join("")}</ol>`
     : `<div class="empty">Noch keine Punkte vergeben.</div>`;
 
-  let left = CONFIG.countdownSeconds;
-  show(`
-    <div class="title">🏆 Scoreboard</div>
-    ${rows}
-    <div class="next">
-      <span class="label">Nächste Frage in</span>
-      <span class="big" id="cd">${left}</span>
-    </div>
-  `);
-  every(() => {
-    left--;
-    const el = document.getElementById("cd");
-    if (el) el.textContent = left;
-    if (left <= 0) nextQuestion();
-  }, 1000);
+  setBody(`<div class="title">🏆 Scoreboard</div>${rows}`);
 }
 
 // ---------- Namensfarben ----------
@@ -462,6 +497,7 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (command === "!trivia start") startGame();
     if (command === "!trivia stop") stopGame();
     if (command === "!trivia skip") skipQuestion();
+    if (command === "!trivia exit") exitToMenu();
     const modeMatch = command.match(/^!trivia #?(\d+)$/); // "!trivia #1" (oder "!trivia 1")
     if (modeMatch) selectMode(modeMatch[1]);
     return;
@@ -566,7 +602,7 @@ loadConfig();
 setInterval(loadConfig, 60 * 1000);
 
 if (!CHANNEL && !TEST) {
-  show(`
+  setBody(`
     <div class="title">Trivia Overlay</div>
     <div class="hint">Bitte <b>?channel=kanalname</b> an die URL hängen (oder <b>?test</b> zum Ausprobieren).</div>
   `);

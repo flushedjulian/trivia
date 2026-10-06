@@ -1,0 +1,14 @@
+# Allgemeinwissen – eine Frage pro Zeile:
+#   Frage | Antwort | weitere erlaubte Antwort | ...
+# Die erste Antwort wird im Stream angezeigt. Zeilen mit # am Anfang werden ignoriert.
+
+Wie heißt die Hauptstadt von Frankreich? | Paris
+Wie viele Beine hat eine Spinne? | 8 | acht
+Welche Farbe entsteht, wenn man Blau und Gelb mischt? | Grün
+Wie heißt der größte Planet in unserem Sonnensystem? | Jupiter
+Wie viele Minuten hat eine Stunde? | 60 | sechzig
+Wie viele Kontinente gibt es? | 7 | sieben
+Welches ist das größte Tier der Welt? | Blauwal
+Wie viele Spieler einer Fußballmannschaft stehen auf dem Platz? | 11 | elf
+In welchem Land stehen die Pyramiden von Gizeh? | Ägypten
+Wie lautet die chemische Formel für Wasser? | H2O

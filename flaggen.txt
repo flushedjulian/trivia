@@ -1,0 +1,25 @@
+# Flaggen – ein Land pro Zeile:
+#   Ländercode | Name | weiterer erlaubter Name | ...
+# Ländercodes (2 Buchstaben): https://flagicons.lipis.dev
+# Der erste Name wird im Stream angezeigt. Zeilen mit # am Anfang werden ignoriert.
+
+de | Deutschland
+fr | Frankreich
+it | Italien
+es | Spanien
+gb | Großbritannien | Vereinigtes Königreich | UK
+us | USA | Vereinigte Staaten | Amerika
+jp | Japan
+br | Brasilien
+ca | Kanada
+ch | Schweiz
+at | Österreich
+nl | Niederlande | Holland
+se | Schweden
+tr | Türkei
+kr | Südkorea | Korea
+mx | Mexiko
+gr | Griechenland
+ie | Irland
+pt | Portugal
+au | Australien
