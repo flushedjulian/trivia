@@ -294,16 +294,55 @@ function setBody(html) {
   }, firstShow ? 0 : EXIT_MS);
 }
 
-// !trivia start → Modus-Menü
+// !trivia start → Modus-Menü (oder Pause-Hinweis, wenn pausiert)
 function startGame() {
+  if (phase === "paused") return showPausedScreen();
   if (phase !== "idle" && phase !== "stopped") return; // läuft schon
   showMenu();
 }
 
-// !trivia exit → zurück zum Menü
+// !trivia exit → zurück zum Menü (beendet auch eine Pause)
 function exitToMenu() {
   if (phase === "idle" || phase === "stopped" || phase === "menu") return;
+  paused = null;
   showMenu();
+}
+
+// !trivia pause → Overlay zuklappen, Spielstand und Punkte bleiben erhalten
+let paused = null;
+const ACTIVE_PHASES = ["menu", "loading", "question", "reveal", "scoreboard"];
+
+function pauseGame() {
+  if (phase === "paused") return card.classList.add("hidden"); // Pause-Hinweis wieder zuklappen
+  if (!ACTIVE_PHASES.includes(phase)) return;
+  paused = {
+    phase,
+    elapsed: phase === "question" ? (performance.now() - startTime) / 1000 : 0,
+  };
+  clearTimers();
+  bodyToken++; // laufenden Inhaltswechsel abbrechen
+  loadToken++; // laufendes Laden einer Fragenliste abbrechen
+  phase = "paused";
+  card.classList.add("hidden");
+  updateTestInfo();
+}
+
+function showPausedScreen() {
+  setHead("");
+  setBody(`
+    <div class="title">⏸️ Pausiert</div>
+    <ul class="rows modes"><li><span class="cmd">!trivia resume</span><span>zum Weiterspielen</span></li></ul>
+  `);
+}
+
+// !trivia resume → da weitermachen, wo pausiert wurde
+function resumeGame() {
+  if (phase !== "paused") return;
+  const p = paused;
+  paused = null;
+  if (p.phase === "question") showQuestion(p.elapsed);   // gleiche Frage, Zeit läuft weiter
+  else if (p.phase === "reveal" || p.phase === "scoreboard") nextQuestion();
+  else showMenu();
 }
 
 function showMenu() {
@@ -320,10 +359,17 @@ function showMenu() {
   updateTestInfo();
 }
 
+// !trivia stop → alles beenden und Punkte zurücksetzen
 function stopGame() {
   clearTimers();
   bodyToken++; // laufenden Inhaltswechsel abbrechen
+  loadToken++; // laufendes Laden einer Fragenliste abbrechen
   phase = "stopped";
+  paused = null;
+  current = null;
+  order = [];
+  scores = {};
+  saveScores();
   card.classList.add("hidden");
   updateTestInfo();
 }
@@ -331,7 +377,7 @@ function stopGame() {
 // !trivia #1, #2, … → Modus wählen (auch mitten im Spiel zum Wechseln)
 async function selectMode(nr) {
   const m = MODES[nr];
-  if (!m || phase === "idle" || phase === "stopped") return;
+  if (!m || !ACTIVE_PHASES.includes(phase)) return;
   clearTimers();
   phase = "loading";
   const token = ++loadToken;
@@ -399,8 +445,6 @@ function nextQuestion() {
     loadQuestions(m).then(q => { if (q.length) m.questions = q; }).catch(() => {});
   }
   current = order.shift();
-  phase = "question";
-  startTime = performance.now();
 
   wordState = null;
   if (current.word) {
@@ -408,6 +452,15 @@ function nextQuestion() {
     const indices = letters.map((ch, i) => i).filter(i => letters[i] !== " ");
     wordState = { letters, revealOrder: shuffle(indices), shown: 0 };
   }
+  showQuestion(0);
+}
+
+// Aktuelle Frage anzeigen; elapsed > 0 beim Fortsetzen nach einer Pause
+function showQuestion(elapsed) {
+  clearTimers();
+  phase = "question";
+  startTime = performance.now() - elapsed * 1000;
+  if (wordState) wordState.shown = 0; // schon aufgedeckte Buchstaben setzt tick() gleich wieder ein
 
   setHead("");
   setBody(`
@@ -537,6 +590,8 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (command === "!trivia stop") stopGame();
     if (command === "!trivia skip") skipQuestion();
     if (command === "!trivia exit") exitToMenu();
+    if (command === "!trivia pause") pauseGame();
+    if (command === "!trivia resume") resumeGame();
     const modeMatch = command.match(/^!trivia #?(\d+)$/); // "!trivia #1" (oder "!trivia 1")
     if (modeMatch) selectMode(modeMatch[1]);
     return;
