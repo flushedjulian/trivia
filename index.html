@@ -269,7 +269,7 @@ function reveal(winner) {
     show(`
       <div class="label">Richtige Antwort</div>
       <div class="answer">${answer}</div>
-      <div class="winner"><b>${escapeHtml(winner.name)}</b> nach ${winner.seconds.toFixed(1)} s
+      <div class="winner"><b style="color:${winner.color}">${escapeHtml(winner.name)}</b> nach ${winner.seconds.toFixed(1)} s
         · <span class="pts">+${winner.points} Punkte</span></div>
     `);
   } else {
@@ -291,7 +291,7 @@ function showScoreboard(highlightId) {
     ? `<ol class="board">${top.map(([id, s], i) => `
         <li class="${id === highlightId ? "me" : ""}">
           <span class="rank">#${i + 1}</span>
-          <span class="name">${escapeHtml(s.name)}</span>
+          <span class="name" style="color:${nameColor(id, s.color)}">${escapeHtml(s.name)}</span>
           <span class="score">${s.points}</span>
         </li>`).join("")}</ol>`
     : `<div class="empty">Noch keine Punkte vergeben.</div>`;
@@ -313,11 +313,44 @@ function showScoreboard(highlightId) {
   }, 1000);
 }
 
+// ---------- Namensfarben ----------
+// Twitch-Standardfarben für User, die keine eigene Farbe gewählt haben
+const DEFAULT_COLORS = ["#FF0000", "#0000FF", "#008000", "#B22222", "#FF7F50", "#9ACD32", "#FF4500",
+  "#2E8B57", "#DAA520", "#D2691E", "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"];
+
+function luminance([r, g, b]) {
+  const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+// Chat-Farbe des Users; zu dunkle Farben werden aufgehellt, damit sie auf Schwarz lesbar sind
+function nameColor(id, color) {
+  if (!/^#[0-9a-f]{6}$/i.test(color || "")) {
+    const hash = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    color = DEFAULT_COLORS[hash % DEFAULT_COLORS.length];
+  }
+  let rgb = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
+  while (luminance(rgb) < 0.2) rgb = rgb.map(c => Math.round(c + (255 - c) * 0.15));
+  return "rgb(" + rgb.join(",") + ")";
+}
+
+// ---------- Freigegebene User (config.json, wird jede Minute neu geladen) ----------
+let allowedUsers = [];
+
+async function loadConfig() {
+  try {
+    const res = await fetch("config.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return;
+    const config = await res.json();
+    allowedUsers = (config.allowedUsers || []).map(u => String(u).toLowerCase().replace(/^@/, ""));
+  } catch {}
+}
+
 // ---------- Chat-Nachrichten verarbeiten ----------
-function onChatMessage(id, name, text, isMod) {
+function onChatMessage({ id, name, text, canControl, color }) {
   const command = text.trim().toLowerCase().replace(/\s+/g, " ");
   if (command.startsWith("!trivia ")) {
-    if (!isMod) return; // nur Streamer und Mods
+    if (!canControl && !allowedUsers.includes(id)) return;
     if (command === "!trivia start") startGame();
     if (command === "!trivia stop") stopGame();
     return;
@@ -330,9 +363,10 @@ function onChatMessage(id, name, text, isMod) {
   const points = pointsAt(seconds);
   if (!scores[id]) scores[id] = { name, points: 0 };
   scores[id].name = name;
+  scores[id].color = color || "";
   scores[id].points += points;
   saveScores();
-  reveal({ id, name, seconds, points });
+  reveal({ id, name, seconds, points, color: nameColor(id, color) });
 }
 
 // ---------- Twitch-Chat (anonym, nur lesen) ----------
@@ -359,8 +393,9 @@ function connectTwitch() {
       const [, rawTags, login, text] = match;
       const tags = Object.fromEntries((rawTags || "").split(";").map(t => t.split("=")));
       const badges = tags["badges"] || "";
-      const isMod = tags["mod"] === "1" || badges.includes("broadcaster/");
-      onChatMessage(login, tags["display-name"] || login, text, isMod);
+      // Streamer, Mods und VIPs dürfen das Quiz steuern
+      const canControl = tags["mod"] === "1" || tags["vip"] === "1" || /(^|,)(broadcaster|moderator|vip)\//.test(badges);
+      onChatMessage({ id: login, name: tags["display-name"] || login, text, canControl, color: tags["color"] });
     }
   };
 
@@ -395,7 +430,8 @@ function setupTestPanel() {
     e.preventDefault();
     const form = e.target;
     const name = form.user.value.trim() || "TestUser";
-    onChatMessage(name.toLowerCase(), name, form.msg.value, true); // im Test zählt man als Mod
+    // im Test zählt man als Mod
+    onChatMessage({ id: name.toLowerCase(), name, text: form.msg.value, canControl: true });
     form.msg.value = "";
   });
   panel.querySelector("#reset").addEventListener("click", () => {
@@ -415,6 +451,8 @@ function updateTestInfo() {
 // ---------- Start ----------
 if (TEST) setupTestPanel();
 if (CHANNEL) connectTwitch();
+loadConfig();
+setInterval(loadConfig, 60 * 1000);
 
 if (!CHANNEL && !TEST) {
   show(`
