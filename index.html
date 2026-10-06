@@ -145,8 +145,8 @@ const CONFIG = {
   maxPoints: 100,           // Punkte bei sofortiger Antwort
   minPoints: 10,            // Punkte kurz vor Ablauf der Zeit
   questionSeconds: 90,      // Zeit pro Frage – danach wird übersprungen
-  countdownSeconds: 10,     // "Nächste Frage in …" nach der Auflösung
-  scoreboardAtSeconds: 5,   // bei diesem Countdown-Stand wechselt es zum Scoreboard
+  countdownSeconds: 15,     // "Nächste Frage in …" nach der Auflösung
+  scoreboardAfterSeconds: 5, // so lange wird die Antwort gezeigt, dann wechselt es zum Scoreboard
   scoreboardSize: 5,        // wie viele Plätze im Scoreboard
 };
 
@@ -557,7 +557,7 @@ function tick() {
   if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
-// Auflösung + Countdown oben; bei scoreboardAtSeconds wechselt der Inhalt zum Scoreboard
+// Auflösung + Countdown oben; nach scoreboardAfterSeconds wechselt der Inhalt zum Scoreboard
 function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   clearTimers();
   phase = "reveal";
@@ -579,7 +579,7 @@ function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
     left--;
     const cd = document.getElementById("cd");
     if (cd) cd.textContent = left;
-    if (left === CONFIG.scoreboardAtSeconds) showScoreboard(winner && winner.id);
+    if (left === CONFIG.countdownSeconds - CONFIG.scoreboardAfterSeconds) showScoreboard(winner && winner.id);
     if (left <= 0) nextQuestion();
   }, 1000);
 }
