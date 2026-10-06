@@ -222,6 +222,12 @@ function stopGame() {
   updateTestInfo();
 }
 
+// Während einer Frage: Antwort auflösen. Bei Auflösung/Scoreboard: direkt zur nächsten Frage.
+function skipQuestion() {
+  if (phase === "question") reveal(null, "Übersprungen – die Antwort war");
+  else if (phase === "reveal" || phase === "scoreboard") nextQuestion();
+}
+
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds - m * 60;
@@ -260,7 +266,7 @@ function tick() {
   if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
-function reveal(winner) {
+function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   phase = "reveal";
   clearTimers();
   const answer = escapeHtml(current.a[0]);
@@ -274,7 +280,7 @@ function reveal(winner) {
     `);
   } else {
     show(`
-      <div class="label">Zeit abgelaufen – die Antwort war</div>
+      <div class="label">${noWinnerLabel}</div>
       <div class="answer none">${answer}</div>
     `);
   }
@@ -353,6 +359,7 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (!canControl && !allowedUsers.includes(id)) return;
     if (command === "!trivia start") startGame();
     if (command === "!trivia stop") stopGame();
+    if (command === "!trivia skip") skipQuestion();
     return;
   }
 
