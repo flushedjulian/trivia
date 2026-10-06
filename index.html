@@ -17,6 +17,7 @@
     --row: rgba(255, 255, 255, 0.07);      /* Zeilen in Listen */
     --row-alt: rgba(255, 255, 255, 0.035); /* jede zweite Zeile, etwas dunkler */
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --max-card: 780px;       /* größte Kartenhöhe (Top 10 bei Schätzfragen = 761px) – so groß ist das Menü */
   }
   * { box-sizing: border-box; }
   html, body {
@@ -40,8 +41,13 @@
     border-radius: 28px;
     padding: 28px 36px 32px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(176, 16, 28, 0.25);
-    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease), min-height 0.4s var(--ease);
+    min-height: 0;
   }
+  /* Menü zeigt die maximale Größe, damit man das Overlay in OBS sauber platzieren kann */
+  .card.full { min-height: var(--max-card); }
+  .commands { margin-top: 28px; font-size: 22px; color: var(--muted); line-height: 1.7; }
+  .commands b { color: var(--text); font-weight: 600; }
   .card.hidden { opacity: 0; transform: translateY(40px); transition-timing-function: ease-in; }
 
   /* Kopfzeile mit "Nächste Frage in …" – bleibt stehen, während der Inhalt darunter wechselt */
@@ -383,6 +389,7 @@ const ENTER_MS = 400;
 let bodyToken = 0;
 
 function setBody(html) {
+  if (phase !== "menu") card.classList.remove("full");
   const token = ++bodyToken;
   const firstShow = card.classList.contains("hidden");
   card.classList.remove("hidden");
@@ -457,6 +464,7 @@ function resumeGame() {
 function showMenu() {
   clearTimers();
   phase = "menu";
+  card.classList.add("full");
   current = null;
   const items = Object.entries(MODES).map(([nr, m]) => `
     <li><span class="cmd">!trivia #${nr}</span><span>${escapeHtml(m.name)}</span></li>`).join("");
@@ -464,6 +472,10 @@ function showMenu() {
   setBody(`
     <div class="title">🎮 Trivia – Modus wählen</div>
     <ul class="rows modes">${items}</ul>
+    <div class="commands">
+      <b>!trivia skip</b> Frage überspringen · <b>!trivia exit</b> zurück zum Menü<br>
+      <b>!trivia pause</b> / <b>resume</b> Pause · <b>!trivia stop</b> beenden (Punkte weg)
+    </div>
   `);
   updateTestInfo();
 }
