@@ -186,7 +186,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-160715";
+const APP_VERSION = "20261006-161132";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -958,7 +958,7 @@ function updateTestInfo() {
 }
 
 // ---------- Automatische Aktualisierung ----------
-// Schaut jede Minute in version.txt. Gibt es eine neue Version, lädt sich das Overlay neu:
+// Schaut alle 30 Sekunden in version.txt. Gibt es eine neue Version, lädt sich das Overlay neu:
 // sofort, wenn kein Spiel läuft, sonst zwischen zwei Fragen – und macht danach im selben Modus weiter.
 let updateReady = null;
 
@@ -1003,7 +1003,7 @@ if (TEST) setupTestPanel();
 if (CHANNEL) connectTwitch();
 loadConfig();
 setInterval(loadConfig, 60 * 1000);
-setInterval(checkForUpdate, 60 * 1000);
+setInterval(checkForUpdate, 30 * 1000);
 const resumed = resumeAfterUpdate();
 
 if (!CHANNEL && !TEST) {
