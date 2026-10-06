@@ -106,6 +106,10 @@
   .board .name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .board .score { font-weight: 800; color: var(--highlight); font-variant-numeric: tabular-nums; }
   .empty { font-size: 26px; color: var(--muted); }
+  .board.guesses li { font-size: 24px; padding: 6px 14px; }
+  .board.guesses li + li { margin-top: 4px; }
+  .board .tip { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .guess-meta { margin: -4px 0 14px; font-size: 20px; color: var(--muted); }
 
   .modes li {
     display: grid; grid-template-columns: max-content 1fr; align-items: center; gap: 24px;
@@ -148,6 +152,10 @@ const CONFIG = {
   countdownSeconds: 15,     // "Nächste Frage in …" nach der Auflösung
   scoreboardAfterSeconds: 5, // so lange wird die Antwort gezeigt, dann wechselt es zum Scoreboard
   scoreboardSize: 5,        // wie viele Plätze im Scoreboard
+  guessSeconds: 45,         // Schätzfragen: Zeit zum Tippen
+  guessCountdownSeconds: 20, // Schätzfragen: "Nächste Frage in …" nach der Auflösung
+  guessScoreboardAfterSeconds: 12, // Schätzfragen: so lange werden die Top 10 gezeigt
+  guessPoints: [100, 80, 65, 55, 45, 35, 25, 20, 15, 10], // Punkte für Platz 1–10
 };
 
 // Modi – Auswahl im Chat mit "!trivia #1", "!trivia #2", …
@@ -156,6 +164,7 @@ const MODES = {
   1: { name: "Allgemeinwissen", file: "allgemeinwissen.txt", parse: p => ({ q: p[0], a: p.slice(1) }), minParts: 2 },
   2: { name: "Flaggen", file: "flaggen.txt", parse: p => ({ flag: p[0].toLowerCase(), a: p.slice(1) }), minParts: 2 },
   3: { name: "Wort erkennen", file: "woerter.txt", parse: p => ({ word: p[0], a: p }), minParts: 1 },
+  4: { name: "Schätzfragen", file: "schaetzfragen.txt", parse: p => ({ q: p[0], value: parseGuess(p[1]), unit: p[2] || "", a: [], guess: true }), minParts: 2 },
 };
 // ===================================================
 
@@ -186,7 +195,8 @@ async function loadQuestions(m) {
     .filter(line => line && !line.startsWith("#"))
     .map(line => line.split("|").map(part => part.trim()).filter(Boolean))
     .filter(parts => parts.length >= m.minParts)
-    .map(m.parse);
+    .map(m.parse)
+    .filter(q => !q.guess || Number.isFinite(q.value));
 }
 
 // ---------- Antworten prüfen ----------
@@ -278,6 +288,29 @@ function answersOf(questions) {
   return answerSets.get(questions);
 }
 
+// Schätzung aus einer Chatnachricht lesen: "384400", "384.400", "ca. 400k", "1,5 Mio", "45 Jahre" …
+function parseGuess(text) {
+  const s = String(text).trim().toLowerCase().replace(/^(ca\.?|circa|etwa|ungefähr|ungefaehr|~)\s*/, "");
+  const m = s.match(/^\d[\d.,' ]*/);
+  if (!m) return null;
+  // Zusatz direkt hinter der Zahl ("400k", "1,5 Mio"); Einheiten wie "300m" oder "400 km" werden ignoriert
+  const sm = s.slice(m[0].length).trim().match(/^(k|tsd\.?|tausend|mio\.?|millionen|million|mrd\.?|milliarden|milliarde)(?![a-zäöüß])/);
+  let num = m[0].replace(/[' ]/g, "").replace(/[.,]+$/, "");
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(num)) num = num.replace(/\./g, "").replace(",", "."); // 384.400 / 1.234,5
+  else if (/^\d+,\d+$/.test(num)) num = num.replace(",", ".");                                  // 149,6
+  else if (!/^\d+(\.\d+)?$/.test(num)) return null;
+  let value = Number(num);
+  const suffix = sm ? sm[1] : "";
+  if (/^(k|tsd|tausend)/.test(suffix)) value *= 1e3;
+  else if (/^(mio|million)/.test(suffix)) value *= 1e6;
+  else if (/^(mrd|milliard)/.test(suffix)) value *= 1e9;
+  return Number.isFinite(value) ? value : null;
+}
+
+function formatNumber(n) {
+  return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(n);
+}
+
 function pointsAt(seconds) {
   const { maxPoints, minPoints, questionSeconds } = CONFIG;
   const progress = Math.min(seconds / questionSeconds, 1);
@@ -291,6 +324,7 @@ let order = [];
 let current = null;
 let startTime = 0;
 let wordState = null;
+let guesses = new Map(); // Schätzfragen: id → { name, color, value, time }
 let loadToken = 0;
 
 // Alle laufenden Timer merken, damit Befehle sie sauber abbrechen können
@@ -454,7 +488,7 @@ async function selectMode(nr) {
 
 // Während einer Frage: Antwort auflösen. Nach der Auflösung: direkt zur nächsten Frage.
 function skipQuestion() {
-  if (phase === "question") reveal(null, "Übersprungen – die Antwort war");
+  if (phase === "question") current.guess ? revealGuess() : reveal(null, "Übersprungen – die Antwort war");
   else if (phase === "reveal" || phase === "scoreboard") nextQuestion();
 }
 
@@ -499,6 +533,7 @@ function nextQuestion() {
     loadQuestions(m).then(q => { if (q.length) m.questions = q; }).catch(() => {});
   }
   current = order.shift();
+  guesses = new Map();
 
   wordState = null;
   if (current.word) {
@@ -517,6 +552,21 @@ function showQuestion(elapsed) {
   if (wordState) wordState.shown = 0; // schon aufgedeckte Buchstaben setzt tick() gleich wieder ein
 
   setHead("");
+  if (current.guess) {
+    const unit = current.unit ? ` (in ${escapeHtml(current.unit)})` : "";
+    setBody(`
+      <div class="top"><span class="timer" id="timer">${formatCountdown(CONFIG.guessSeconds - elapsed)}</span></div>
+      <div class="question">${escapeHtml(current.q)}</div>
+      <div class="points-row">
+        <span class="points" id="guess-count">${tipCount()}</span>
+        <div class="bar"><div id="bar" style="width:${Math.max(0, 100 - elapsed / CONFIG.guessSeconds * 100)}%"></div></div>
+      </div>
+      <div class="hint">Schätz als Zahl im Chat${unit}! Nur dein erster Tipp zählt – die 10 Nächsten bekommen Punkte.</div>
+    `);
+    updateTestInfo();
+    every(tick, 100);
+    return;
+  }
   setBody(`
     <div class="top"><span class="timer" id="timer">00:00.0</span></div>
     ${questionHtml(current)}
@@ -544,9 +594,26 @@ function revealLetters(elapsed) {
   }
 }
 
+function tipCount() {
+  return guesses.size + (guesses.size === 1 ? " Tipp" : " Tipps");
+}
+
+function formatCountdown(seconds) {
+  const s = Math.max(0, Math.ceil(seconds));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
 function tick() {
   if (phase !== "question") return;
   const elapsed = (performance.now() - startTime) / 1000;
+  if (current.guess) {
+    const timerEl = document.getElementById("timer");
+    const barEl = document.getElementById("bar");
+    if (timerEl) timerEl.textContent = formatCountdown(CONFIG.guessSeconds - elapsed);
+    if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.guessSeconds) * 100) + "%";
+    if (elapsed >= CONFIG.guessSeconds) revealGuess();
+    return;
+  }
   const timerEl = document.getElementById("timer");
   const pointsEl = document.getElementById("points");
   const barEl = document.getElementById("bar");
@@ -564,9 +631,6 @@ function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
   const answer = current.flag
     ? `<img class="flag-small" src="${flagUrl(current.flag)}" alt="">${escapeHtml(current.a[0])}`
     : escapeHtml(current.a[0]);
-  let left = CONFIG.countdownSeconds;
-
-  setHead(`<span class="label">Nächste Frage in</span><span class="big" id="cd">${left}</span>`);
   setBody(winner
     ? `<div class="label">Richtige Antwort</div>
        <div class="answer">${answer}</div>
@@ -574,14 +638,57 @@ function reveal(winner, noWinnerLabel = "Zeit abgelaufen – die Antwort war") {
          · <span class="pts">+${winner.points} Punkte</span></div>`
     : `<div class="label">${noWinnerLabel}</div>
        <div class="answer">${answer}</div>`);
+  startNextCountdown(CONFIG.countdownSeconds, CONFIG.scoreboardAfterSeconds, () => showScoreboard(winner && winner.id));
+}
 
+// "Nächste Frage in …" oben; nach switchAfter Sekunden wechselt der Inhalt (zum Scoreboard)
+function startNextCountdown(total, switchAfter, onSwitch) {
+  let left = total;
+  setHead(`<span class="label">Nächste Frage in</span><span class="big" id="cd">${left}</span>`);
   every(() => {
     left--;
     const cd = document.getElementById("cd");
     if (cd) cd.textContent = left;
-    if (left === CONFIG.countdownSeconds - CONFIG.scoreboardAfterSeconds) showScoreboard(winner && winner.id);
+    if (left === total - switchAfter) onSwitch();
     if (left <= 0) nextQuestion();
   }, 1000);
+}
+
+// Schätzfragen auflösen: die 10 Nächsten (bei gleichem Abstand zählt der frühere Tipp) bekommen Punkte
+function revealGuess() {
+  clearTimers();
+  phase = "reveal";
+  const ranked = [...guesses.entries()]
+    .map(([id, g]) => ({ id, ...g, diff: Math.abs(g.value - current.value) }))
+    .sort((a, b) => a.diff - b.diff || a.time - b.time)
+    .slice(0, CONFIG.guessPoints.length);
+
+  ranked.forEach((r, i) => {
+    r.points = CONFIG.guessPoints[i];
+    if (!scores[r.id]) scores[r.id] = { name: r.name, points: 0 };
+    scores[r.id].name = r.name;
+    scores[r.id].color = r.color || "";
+    scores[r.id].points += r.points;
+  });
+  if (ranked.length) saveScores();
+
+  const unit = current.unit ? " " + escapeHtml(current.unit) : "";
+  const list = ranked.length
+    ? `<div class="guess-meta">Die ${ranked.length} Nächsten von ${tipCount()}</div>
+       <ol class="rows board guesses">${ranked.map((r, i) => `
+        <li>
+          <span class="rank">#${i + 1}</span>
+          <span class="name" style="color:${nameColor(r.id, r.color)}">${escapeHtml(r.name)}</span>
+          <span class="tip">${formatNumber(r.value)}${unit}</span>
+          <span class="score">+${r.points}</span>
+        </li>`).join("")}</ol>`
+    : `<div class="empty">Niemand hat geschätzt.</div>`;
+
+  setBody(`
+    <div class="label">Richtige Antwort</div>
+    <div class="answer">${formatNumber(current.value)}${unit}</div>
+    ${list}`);
+  startNextCountdown(CONFIG.guessCountdownSeconds, CONFIG.guessScoreboardAfterSeconds, () => showScoreboard(ranked[0] && ranked[0].id));
 }
 
 function showScoreboard(highlightId) {
@@ -652,6 +759,15 @@ function onChatMessage({ id, name, text, canControl, color }) {
   }
 
   if (phase !== "question") return;
+  if (current.guess) {
+    if (guesses.has(id)) return; // nur der erste Tipp zählt
+    const value = parseGuess(text);
+    if (value === null) return;
+    guesses.set(id, { name, color, value, time: performance.now() });
+    const countEl = document.getElementById("guess-count");
+    if (countEl) countEl.textContent = tipCount();
+    return;
+  }
   if (!isCorrect(text, current.a, answersOf(mode.questions))) return;
 
   const seconds = (performance.now() - startTime) / 1000;
@@ -739,7 +855,7 @@ function updateTestInfo() {
   if (!TEST) return;
   const sol = document.getElementById("solution");
   const status = document.getElementById("status");
-  if (sol) sol.textContent = current ? "Lösung: " + current.a.join(" / ") : "";
+  if (sol) sol.textContent = !current ? "" : "Lösung: " + (current.guess ? formatNumber(current.value) + " " + current.unit : current.a.join(" / "));
   if (status) status.textContent = "Twitch: " + (CHANNEL ? connectionStatus : "kein ?channel= angegeben");
 }
 
