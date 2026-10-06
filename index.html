@@ -190,13 +190,16 @@ async function loadQuestions(m) {
 }
 
 // ---------- Antworten prüfen ----------
-function normalize(s) {
+function normalizeChars(s) {
   return s.toLowerCase()
     .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ").trim()
-    .replace(/^(der|die|das|ein|eine) /, "");
+    .replace(/\s+/g, " ").trim();
+}
+
+function normalize(s) {
+  return normalizeChars(s).replace(/^(der|die|das|ein|eine) /, "");
 }
 
 function levenshtein(a, b) {
@@ -213,12 +216,52 @@ function levenshtein(a, b) {
   return row[b.length];
 }
 
+// Zahl → deutsche Zahlwörter (alle üblichen Schreibweisen), z.B. 21 → einundzwanzig, 1989 → neunzehnhundertneunundachtzig
+const ONES = ["null", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf",
+  "dreizehn", "vierzehn", "fünfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"];
+const TENS = ["", "", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"];
+
+function under100(n) {
+  if (n < 20) return ONES[n];
+  const unit = n % 10, ten = TENS[Math.floor(n / 10)];
+  return unit ? (unit === 1 ? "ein" : ONES[unit]) + "und" + ten : ten;
+}
+
+function under1000(n) { // liefert mehrere Varianten ("hundert" / "einhundert")
+  const h = Math.floor(n / 100), rest = n % 100;
+  if (!h) return [under100(n)];
+  const heads = h === 1 ? ["hundert", "einhundert"] : [(h === 1 ? "ein" : ONES[h]) + "hundert"];
+  return heads.map(head => rest ? head + under100(rest) : head);
+}
+
+function numberWords(n) {
+  if (n < 1000) return under1000(n);
+  const th = Math.floor(n / 1000), rest = n % 1000;
+  const heads = th === 1 ? ["tausend", "eintausend"] : under1000(th).map(x => x.replace(/eins$/, "ein") + "tausend");
+  const tails = rest ? under1000(rest) : [""];
+  const words = heads.flatMap(head => tails.map(tail => head + tail));
+  if (n >= 1100 && n < 2000) { // Jahreszahlen: neunzehnhundert…
+    const r = n % 100;
+    words.push(under100(Math.floor(n / 100)) + "hundert" + (r ? under100(r) : ""));
+  }
+  return words;
+}
+
 function isCorrect(message, answers) {
   const msg = normalize(message);
+  const compact = normalizeChars(message).replace(/ /g, ""); // "neun und achtzig" → "neunundachtzig"
   return answers.some(answer => {
     const a = normalize(answer);
     if (msg === a) return true;
-    if (/^\d+$/.test(a)) return false; // Zahlen müssen exakt stimmen
+    if (/^\d+$/.test(a)) {
+      // Zahlen: Ziffern müssen exakt stimmen, ausgeschrieben sind kleine Tippfehler erlaubt
+      const n = Number(a);
+      if (n > 9999) return false;
+      return numberWords(n).some(word => {
+        const w = normalize(word);
+        return compact === w || levenshtein(compact, w) <= (w.length >= 9 ? 2 : w.length >= 5 ? 1 : 0);
+      });
+    }
     const tolerance = a.length >= 9 ? 2 : a.length >= 5 ? 1 : 0;
     return levenshtein(msg, a) <= tolerance;
   });

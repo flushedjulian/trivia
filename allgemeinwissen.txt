@@ -12,3 +12,96 @@ Welches ist das größte Tier der Welt? | Blauwal
 Wie viele Spieler einer Fußballmannschaft stehen auf dem Platz? | 11 | elf
 In welchem Land stehen die Pyramiden von Gizeh? | Ägypten
 Wie lautet die chemische Formel für Wasser? | H2O
+
+Wie heißt die Hauptstadt von Italien? | Rom
+Wie heißt die Hauptstadt von Spanien? | Madrid
+Wie heißt die Hauptstadt von Japan? | Tokio | Tokyo
+Wie heißt die Hauptstadt von Österreich? | Wien
+Wie heißt die Hauptstadt von Kanada? | Ottawa
+Wie heißt die Hauptstadt von Australien? | Canberra
+Wie heißt die Hauptstadt der Türkei? | Ankara
+Wie heißt die Hauptstadt von Norwegen? | Oslo
+Wie heißt die Hauptstadt von Portugal? | Lissabon | Lisboa
+Wie heißt die Hauptstadt von Ägypten? | Kairo
+Welcher Fluss fließt durch Paris? | Seine
+Welcher Fluss fließt durch Köln? | Rhein
+Wie heißt der höchste Berg der Welt? | Mount Everest | Everest
+Wie heißt der höchste Berg Deutschlands? | Zugspitze
+Welcher Planet ist der Sonne am nächsten? | Merkur
+Welcher Planet wird auch „Roter Planet“ genannt? | Mars
+Wie viele Planeten hat unser Sonnensystem? | 8 | acht
+Welcher Himmelskörper umkreist die Erde und leuchtet nachts am Himmel? | Mond
+Welches ist der größte Ozean der Erde? | Pazifik | Pazifischer Ozean | Stiller Ozean
+Welches ist der größte Kontinent? | Asien
+Welches ist das flächenmäßig größte Land der Welt? | Russland
+Welches Land hat die meisten Einwohner? | Indien
+Auf welchem Kontinent liegt Kenia? | Afrika
+Wie heißt die größte Wüste Afrikas? | Sahara
+Wie heißt die größte Insel der Welt? | Grönland
+In welchem Land liegt die Stadt Venedig? | Italien
+Wie viele Bundesländer hat Deutschland? | 16 | sechzehn
+Wie viele Tage hat ein Schaltjahr? | 366
+Wie viele Sekunden hat eine Minute? | 60 | sechzig
+Wie viele Stunden hat ein Tag? | 24 | vierundzwanzig
+Wie viele Wochen hat ein Jahr (gerundet)? | 52 | zweiundfünfzig
+Wie viele Flächen hat ein Würfel? | 6 | sechs
+Wie viele Ecken hat ein Dreieck? | 3 | drei
+Was ist die Wurzel aus 81? | 9 | neun
+Wie viel ist 7 mal 8? | 56
+Wie viel ist 12 mal 12? | 144
+Wie viele Grad hat ein rechter Winkel? | 90
+Wie viele Zentimeter hat ein Meter? | 100 | hundert
+Wie viele Gramm hat ein Kilogramm? | 1000 | tausend
+Wie viele Monate im Jahr haben 31 Tage? | 7 | sieben
+Was ist das chemische Symbol für Gold? | Au
+Welches Gas brauchen Menschen zum Atmen? | Sauerstoff
+Bei wie viel Grad Celsius kocht Wasser auf Meereshöhe? | 100
+Bei wie viel Grad Celsius gefriert Wasser? | 0 | null
+Welches ist das größte Organ des Menschen? | Haut
+Wie viele Knochen hat ein erwachsener Mensch? | 206
+Wie viele Zähne hat ein erwachsener Mensch normalerweise? | 32
+Welches Organ pumpt das Blut durch den Körper? | Herz
+Welches ist das schnellste Landtier? | Gepard
+Welches ist das größte Landtier? | Elefant | Afrikanischer Elefant
+Wie nennt man ein Pferdebaby? | Fohlen
+Wie nennt man ein männliches Huhn? | Hahn
+Welches Tier ist das Wappentier Deutschlands? | Adler
+Wovon ernähren sich Pandas hauptsächlich? | Bambus
+Welcher Vogel kann rückwärts fliegen? | Kolibri
+Welches Säugetier kann fliegen? | Fledermaus
+Wer malte die Mona Lisa? | Leonardo da Vinci | da Vinci | Leonardo
+Wer schrieb „Faust“? | Goethe | Johann Wolfgang von Goethe
+Wer komponierte die „Ode an die Freude“ (9. Sinfonie)? | Beethoven | Ludwig van Beethoven
+Wer schrieb „Romeo und Julia“? | Shakespeare | William Shakespeare
+Wer entwickelte die Relativitätstheorie? | Einstein | Albert Einstein
+Wer betrat als erster Mensch den Mond? | Neil Armstrong | Armstrong
+In welchem Jahr fiel die Berliner Mauer? | 1989
+In welchem Jahr endete der Zweite Weltkrieg? | 1945
+In welchem Jahr wurde Deutschland wiedervereinigt? | 1990
+In welchem Jahr landete der erste Mensch auf dem Mond? | 1969
+Wer war der erste Bundeskanzler der Bundesrepublik Deutschland? | Konrad Adenauer | Adenauer
+Welcher Seefahrer erreichte 1492 Amerika? | Kolumbus | Christoph Kolumbus | Columbus
+Wie viele Saiten hat eine normale Gitarre? | 6 | sechs
+Wie heißt das berühmte Bauwerk in Paris, das 1889 eröffnet wurde? | Eiffelturm
+In welcher Stadt steht das Kolosseum? | Rom
+In welchem Land steht die Chinesische Mauer? | China
+In welcher Stadt steht das Brandenburger Tor? | Berlin
+In welcher Stadt steht die Freiheitsstatue? | New York | New York City | NYC
+Wie viele Spieler einer Basketballmannschaft stehen auf dem Feld? | 5 | fünf
+Wie viele Ringe hat das olympische Symbol? | 5 | fünf
+In welcher Sportart gibt es den „Slam Dunk“? | Basketball
+Wie viele Felder hat ein Schachbrett? | 64
+Wie heißt die Schachfigur, die nur diagonal zieht? | Läufer
+Wie viele Kilometer ist ein Marathon lang? | 42,195 | 42.195 | 42
+Wie heißt der berühmte Klempner von Nintendo? | Mario | Super Mario
+Wie heißt Marios Bruder? | Luigi
+Wie heißt das gelbe Pokémon, das Ash begleitet? | Pikachu
+Welche Farbe hat Sonic the Hedgehog? | Blau
+In welchem Spiel springt man zu Beginn aus einem fliegenden Bus? | Fortnite
+Welche Währung hat Japan? | Yen
+Welche Währung hat Großbritannien? | Pfund | Britisches Pfund | Pfund Sterling
+Welche Farbe entsteht, wenn man Rot und Weiß mischt? | Rosa | Pink
+Welche Farbe entsteht, wenn man Rot und Gelb mischt? | Orange
+Aus welchem Land stammt die Pizza ursprünglich? | Italien
+Aus welchem Land stammt Sushi? | Japan
+Welche Frucht ist das Logo der Firma Apple? | Apfel
