@@ -66,8 +66,6 @@
     padding-bottom: 16px; border-bottom: 2px solid var(--accent-dark);
   }
   .head .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; display: inline-block; }
-  .head .big.tick { animation: tick 0.45s var(--ease); }
-  @keyframes tick { from { opacity: 0.35; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
   /* Höhe passt sich weich an; Inhalt fährt nach unten raus und von unten wieder rein */
   .body { overflow: hidden; margin: 0 -10px; padding: 0 10px; transition: height var(--t-move) var(--ease); }
   .content { transition: opacity 0.2s var(--ease), transform 0.2s var(--ease); }
@@ -188,7 +186,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-160310";
+const APP_VERSION = "20261006-160501";
 
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
@@ -747,12 +745,7 @@ function startNextCountdown(total, switchAfter, onSwitch) {
   every(() => {
     left--;
     const cd = document.getElementById("cd");
-    if (cd) {
-      cd.textContent = left;
-      cd.classList.remove("tick");
-      void cd.offsetWidth; // Animation neu starten
-      cd.classList.add("tick");
-    }
+    if (cd) cd.textContent = left;
     if (left === total - switchAfter) onSwitch();
     if (left <= 0) nextQuestion();
   }, 1000);
