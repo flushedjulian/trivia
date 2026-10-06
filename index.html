@@ -16,7 +16,9 @@
     --highlight: #ff3b47;    /* helles Rot: Punkte, Countdown */
     --row: rgba(255, 255, 255, 0.07);      /* Zeilen in Listen */
     --row-alt: rgba(255, 255, 255, 0.035); /* jede zweite Zeile, etwas dunkler */
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);       /* weiches Abbremsen für alles, was erscheint */
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);        /* für alles, was verschwindet */
+    --t-move: 0.5s;                               /* Höhe, Kopfzeile, Karte */
     --max-card: 780px;       /* größte Kartenhöhe (Top 10 bei Schätzfragen = 761px) – so groß ist das Menü */
   }
   * { box-sizing: border-box; }
@@ -41,28 +43,57 @@
     border-radius: 28px;
     padding: 28px 36px 32px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(176, 16, 28, 0.25);
-    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease), min-height 0.4s var(--ease);
+    transition: opacity var(--t-move) var(--ease), transform var(--t-move) var(--ease), min-height var(--t-move) var(--ease);
     min-height: 0;
+    will-change: transform, opacity;
   }
   /* Menü zeigt die maximale Größe, damit man das Overlay in OBS sauber platzieren kann */
   .card.full { min-height: var(--max-card); }
-  .card.hidden { opacity: 0; transform: translateY(40px); transition-timing-function: ease-in; }
+  .card.hidden {
+    opacity: 0; transform: translateY(24px) scale(0.98);
+    transition-duration: 0.35s; transition-timing-function: var(--ease-in);
+  }
 
   /* Kopfzeile mit "Nächste Frage in …" – bleibt stehen, während der Inhalt darunter wechselt */
+  .head-wrap {
+    display: grid; grid-template-rows: 1fr; margin-bottom: 20px;
+    transition: grid-template-rows var(--t-move) var(--ease), margin-bottom var(--t-move) var(--ease), opacity 0.35s var(--ease);
+  }
+  .head-wrap.off { grid-template-rows: 0fr; margin-bottom: 0; opacity: 0; transition-timing-function: var(--ease), var(--ease), var(--ease-in); }
+  .head-clip { overflow: hidden; min-height: 0; }
   .head {
     display: flex; justify-content: space-between; align-items: center;
-    max-height: 120px; overflow: hidden;
-    padding-bottom: 16px; margin-bottom: 20px;
-    border-bottom: 2px solid var(--accent-dark);
-    transition: max-height 0.4s var(--ease), opacity 0.4s var(--ease),
-      padding 0.4s var(--ease), margin 0.4s var(--ease), border-color 0.4s var(--ease);
+    padding-bottom: 16px; border-bottom: 2px solid var(--accent-dark);
   }
-  .head.off { max-height: 0; opacity: 0; padding-bottom: 0; margin-bottom: 0; border-color: transparent; }
-  .head .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  .head .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--highlight); font-variant-numeric: tabular-nums; display: inline-block; }
+  .head .big.tick { animation: tick 0.45s var(--ease); }
+  @keyframes tick { from { opacity: 0.35; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
   /* Höhe passt sich weich an; Inhalt fährt nach unten raus und von unten wieder rein */
-  .body { overflow: hidden; margin: 0 -10px; padding: 0 10px; transition: height 0.4s var(--ease); }
-  .content { transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
-  .content.out { opacity: 0; transform: translateY(28px); transition-duration: 0.22s; transition-timing-function: ease-in; }
+  .body { overflow: hidden; margin: 0 -10px; padding: 0 10px; transition: height var(--t-move) var(--ease); }
+  .content { transition: opacity 0.2s var(--ease), transform 0.2s var(--ease); }
+  .content.out { opacity: 0; transform: translateY(10px); transition-timing-function: var(--ease-in); }
+
+  /* Neuer Inhalt baut sich Element für Element auf */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .content > *:not(.rows) { animation: rise 0.6s var(--ease) both; }
+  .content > :nth-child(1) { animation-delay: 0.03s; }
+  .content > :nth-child(2) { animation-delay: 0.09s; }
+  .content > :nth-child(3) { animation-delay: 0.15s; }
+  .content > :nth-child(4) { animation-delay: 0.21s; }
+  .content > :nth-child(5) { animation-delay: 0.27s; }
+  .content > :nth-child(6) { animation-delay: 0.33s; }
+  /* Listenzeilen (Menü, Leaderboard, Top 10) kommen nacheinander */
+  .rows li { animation: rise 0.55s var(--ease) both; }
+  .rows li:nth-child(1) { animation-delay: 0.10s; }
+  .rows li:nth-child(2) { animation-delay: 0.15s; }
+  .rows li:nth-child(3) { animation-delay: 0.20s; }
+  .rows li:nth-child(4) { animation-delay: 0.25s; }
+  .rows li:nth-child(5) { animation-delay: 0.30s; }
+  .rows li:nth-child(6) { animation-delay: 0.35s; }
+  .rows li:nth-child(7) { animation-delay: 0.40s; }
+  .rows li:nth-child(8) { animation-delay: 0.45s; }
+  .rows li:nth-child(9) { animation-delay: 0.50s; }
+  .rows li:nth-child(10) { animation-delay: 0.55s; }
 
   .bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 14px; }
   .bottom .hint { margin-top: 0; }
@@ -71,7 +102,7 @@
   .points-row { display: flex; align-items: center; gap: 16px; }
   .points { font-size: 24px; font-weight: 600; color: var(--highlight); min-width: 150px; font-variant-numeric: tabular-nums; }
   .bar { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 999px; overflow: hidden; }
-  .bar > div { height: 100%; background: linear-gradient(90deg, var(--accent-dark), var(--highlight)); border-radius: 999px; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, var(--accent-dark), var(--highlight)); border-radius: 999px; transition: width 0.1s linear; }
   .hint { margin-top: 14px; font-size: 22px; color: var(--muted); }
 
   .label { font-size: 22px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -95,7 +126,10 @@
     border-bottom: 4px solid var(--muted);
     font-size: calc(var(--slot, 52px) * 0.96); font-weight: 800; line-height: 1; color: var(--highlight);
   }
+  .slot { transition: border-color 0.4s var(--ease); }
   .slot.open { border-color: var(--highlight); }
+  .slot .ch { display: inline-block; animation: pop 0.5s var(--ease) both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.6); } to { opacity: 1; transform: none; } }
   .slot.space { border: 0; width: calc(var(--slot, 52px) / 2); }
 
   .title { font-size: 36px; font-weight: 800; margin: 0 0 16px; }
@@ -147,14 +181,14 @@
 <body>
 <div id="stage">
   <div class="card hidden" id="card">
-    <div class="head off" id="head"></div>
+    <div class="head-wrap off" id="head"><div class="head-clip"><div class="head" id="head-inner"></div></div></div>
     <div class="body" id="body"><div class="content out" id="content"></div></div>
   </div>
 </div>
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-155155";
+const APP_VERSION = "20261006-155740";
 
 // ================== EINSTELLUNGEN ==================
 const CONFIG = {
@@ -188,6 +222,7 @@ const STORAGE_KEY = "trivia-scores-" + (CHANNEL || "test");
 
 const card = document.getElementById("card");
 const headEl = document.getElementById("head");
+const headInner = document.getElementById("head-inner");
 const bodyEl = document.getElementById("body");
 const contentEl = document.getElementById("content");
 
@@ -381,14 +416,14 @@ function escapeHtml(s) {
 
 // Kopfzeile weich ein-/ausklappen (beim Ausklappen bleibt der alte Inhalt stehen, bis sie zu ist)
 function setHead(html) {
-  if (html) headEl.innerHTML = html;
+  if (html) headInner.innerHTML = html;
   headEl.classList.toggle("off", !html);
 }
 
 // Inhalt tauschen: alter Inhalt fährt nach unten raus, neuer fährt von unten rein,
 // die Karte passt ihre Höhe dabei weich an
-const EXIT_MS = 220;
-const ENTER_MS = 400;
+const EXIT_MS = 200;
+const ENTER_MS = 500;
 let bodyToken = 0;
 
 function setBody(html) {
@@ -626,7 +661,7 @@ function revealLetters(elapsed) {
     const i = wordState.revealOrder[wordState.shown];
     const slot = document.getElementById("slot-" + i);
     if (!slot) return; // Inhalt noch nicht eingeblendet
-    slot.textContent = wordState.letters[i];
+    slot.innerHTML = `<span class="ch">${escapeHtml(wordState.letters[i])}</span>`;
     slot.classList.add("open");
     wordState.shown++;
   }
@@ -686,7 +721,12 @@ function startNextCountdown(total, switchAfter, onSwitch) {
   every(() => {
     left--;
     const cd = document.getElementById("cd");
-    if (cd) cd.textContent = left;
+    if (cd) {
+      cd.textContent = left;
+      cd.classList.remove("tick");
+      void cd.offsetWidth; // Animation neu starten
+      cd.classList.add("tick");
+    }
     if (left === total - switchAfter) onSwitch();
     if (left <= 0) nextQuestion();
   }, 1000);
