@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-112225";
+const APP_VERSION = "20261007-112531";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -358,26 +358,34 @@ function parseGuess(text) {
   return Number.isFinite(value) ? value : null;
 }
 
-// Wie die Einheit im Overlay erscheint: Hinweis unter der Frage + Anhang an Zahlen
-const UNIT_NAMES = {
-  "m": "Metern", "km": "Kilometern", "cm": "Zentimetern", "kg": "Kilogramm", "g": "Gramm", "t": "Tonnen",
-  "liter": "Litern", "l": "Litern", "m/s": "Metern pro Sekunde", "km/h": "Kilometern pro Stunde", "°c": "Grad Celsius",
-  "sekunden": "Sekunden", "minuten": "Minuten", "stunden": "Stunden", "tage": "Tagen", "jahre": "Jahren",
-  "monate": "Monaten",
-  "mio. km": "Millionen Kilometern",
-  "millionen": "Millionen", "milliarden": "Milliarden", "billionen": "Billionen", "billiarden": "Billiarden",
+// Wie die Einheit im Overlay erscheint. Der Hinweis unter der Frage verrät bewusst keine Größenordnung:
+// nur "Angabe: Meter", "Angabe: Liter", … oder bei Gezähltem einfach "Angabe: Zahl".
+const UNIT_LABELS = {
+  "m": "Meter", "km": "Kilometer", "cm": "Zentimeter", "kg": "Kilogramm", "g": "Gramm", "t": "Tonnen",
+  "liter": "Liter", "l": "Liter", "m/s": "Meter pro Sekunde", "km/h": "km/h", "°c": "Grad Celsius",
+  "sekunden": "Sekunden", "minuten": "Minuten", "stunden": "Stunden", "tage": "Tage", "monate": "Monate", "jahre": "Jahre",
+  "mio. km": "Kilometer",
 };
 
-// Bei Angaben in Millionen usw. darf der Chat auch die ganze Zahl oder "160 Mio" schreiben – wird umgerechnet
+// Größenangaben in der Datei (z.B. "160 | Millionen"): intern wird mit der vollen Zahl verglichen
 const UNIT_MULTIPLIERS = { "mio. km": 1e6, "millionen": 1e6, "milliarden": 1e9, "billionen": 1e12, "billiarden": 1e15 };
 function unitMultiplier(unit) { return UNIT_MULTIPLIERS[(unit || "").trim().toLowerCase()] || 1; }
 
+// label: Hinweis unter der Frage · suffix: hinter der aufgelösten Antwort · tipSuffix: hinter den Tipps (volle Zahl)
 function unitInfo(unit) {
   const u = (unit || "").trim();
-  if (u.toLowerCase() === "jahr") return { label: "Angabe: Jahreszahl", suffix: "" };
-  const name = UNIT_NAMES[u.toLowerCase()];
-  if (name) return { label: "Angabe in " + name, suffix: " " + u };
-  return { label: u ? "Angabe: Anzahl " + u : "Angabe: Zahl", suffix: u ? " " + u : "" };
+  const key = u.toLowerCase();
+  if (key === "jahr") return { label: "Angabe: Jahreszahl", suffix: "", tipSuffix: "" };
+  if (key === "mio. km") return { label: "Angabe: Kilometer", suffix: " Mio. km", tipSuffix: " km" };
+  if (UNIT_LABELS[key]) return { label: "Angabe: " + UNIT_LABELS[key], suffix: " " + u, tipSuffix: " " + u };
+  return { label: "Angabe: Zahl", suffix: u ? " " + u : "", tipSuffix: "" };
+}
+
+// große Tipps lesbar machen: 160000000 → "160 Mio.", 2e16 → "20 Billiarden"
+function formatBig(n) {
+  const steps = [[1e15, " Billiarden"], [1e12, " Billionen"], [1e9, " Mrd."], [1e6, " Mio."]];
+  for (const [size, word] of steps) if (Math.abs(n) >= size) return formatNumber(n / size) + word;
+  return formatNumber(n);
 }
 
 function formatNumber(n) {
@@ -787,7 +795,7 @@ function revealGuess() {
   clearTimers();
   phase = "reveal";
   const ranked = [...guesses.entries()]
-    .map(([id, g]) => ({ id, ...g, diff: Math.abs(g.value - current.value) }))
+    .map(([id, g]) => ({ id, ...g, diff: Math.abs(g.value - current.value * unitMultiplier(current.unit)) }))
     .sort((a, b) => a.diff - b.diff || a.seconds - b.seconds)
     .slice(0, CONFIG.guessPoints.length);
 
@@ -803,14 +811,16 @@ function revealGuess() {
   });
   if (ranked.length) saveScores();
 
-  const unit = escapeHtml(unitInfo(current.unit).suffix);
+  const info = unitInfo(current.unit);
+  const unit = escapeHtml(info.suffix);
+  const tipSuffix = escapeHtml(info.tipSuffix);
   const list = ranked.length
     ? `<div class="guess-meta">Die ${ranked.length} Nächsten von ${tipCount()}</div>
        <ol class="rows board guesses">${ranked.map((r, i) => `
         <li>
           <span class="rank">#${i + 1}</span>
           <span class="name" style="color:${nameColor(r.id, r.color)}">${escapeHtml(r.name)}</span>
-          <span class="tip">${formatNumber(r.value)}${unit}</span>
+          <span class="tip">${formatBig(r.value)}${tipSuffix}</span>
           <span class="tip">${r.seconds.toFixed(1).replace(".", ",")} s</span>
           <span class="score">+${r.points}</span>
         </li>`).join("")}</ol>`
@@ -966,10 +976,8 @@ function onChatMessage({ id, name, text, canControl, color }) {
   if (phase !== "question") return;
   if (current.guess) {
     if (guesses.has(id)) return; // nur der erste Tipp zählt
-    let value = parseGuess(text);
+    const value = parseGuess(text); // "160 Mio", "160000000", "160.000.000" → volle Zahl
     if (value === null) return;
-    const mult = unitMultiplier(current.unit);
-    if (mult > 1 && value >= mult) value = value / mult; // "160 Mio" / "160000000" → 160 (Millionen)
     guesses.set(id, { name, color, value, seconds: (performance.now() - startTime) / 1000 });
     const countEl = document.getElementById("guess-count");
     if (countEl) countEl.textContent = tipCount();

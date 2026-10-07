@@ -3,7 +3,7 @@
 # Einheiten: m, km, cm, kg, t, Liter, m/s, km/h, °C, Sekunden, Minuten, Stunden, Tage, Monate, Jahre, Jahr (= Jahreszahl),
 #   Millionen, Milliarden, Billionen, Billiarden, Mio. km – oder ein Zählwort wie Brücken, Fenster (wird als „Anzahl …“ angezeigt).
 # Zahlen ohne Tausenderpunkte schreiben, Kommazahlen mit Komma (z.B. 149,6).
-# Bei „Millionen“ usw. reicht es, wenn der Chat z.B. 160 tippt – „160 Mio“ oder „160000000“ wird automatisch umgerechnet.
+# Bei „Millionen“ usw. zeigt das Overlay nur „Angabe: Zahl“. Der Chat tippt die volle Zahl („160000000“ oder „160 Mio“).
 # Zeilen mit # am Anfang werden ignoriert. Quellen siehe Chatverlauf (Stand Oktober 2026).
 
 # Verrückte Mengen
