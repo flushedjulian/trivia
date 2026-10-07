@@ -1,47 +1,77 @@
 # Schätzfragen – eine Frage pro Zeile:
 #   Frage | richtige Zahl | Einheit
-# Einheiten: m, km, kg, g, t, Liter, m/s, km/h, °C, Sekunden, Minuten, Tage, Jahre, Jahr (= Jahreszahl)
-# oder ein Zählwort wie Teams, Folgen, Felder (wird als „Anzahl“ angezeigt).
+# Einheiten: m, km, cm, kg, t, Liter, m/s, km/h, °C, Sekunden, Minuten, Stunden, Tage, Monate, Jahre, Jahr (= Jahreszahl),
+#   Millionen, Milliarden, Billionen, Billiarden, Mio. km – oder ein Zählwort wie Brücken, Fenster (wird als „Anzahl …“ angezeigt).
 # Zahlen ohne Tausenderpunkte schreiben, Kommazahlen mit Komma (z.B. 149,6).
-# Die 10 Leute, die am nächsten dran sind, bekommen Punkte. Zeilen mit # am Anfang werden ignoriert.
+# Bei „Millionen“ usw. reicht es, wenn der Chat z.B. 160 tippt – „160 Mio“ oder „160000000“ wird automatisch umgerechnet.
+# Zeilen mit # am Anfang werden ignoriert. Quellen siehe Chatverlauf (Stand Oktober 2026).
 
-Wie weit ist der Mond im Durchschnitt von der Erde entfernt? | 384400 | km
-Wie hoch ist der Eiffelturm mit Antennen? | 330 | m
-Wie hoch ist der Mount Everest? | 8849 | m
-Wie lang ist die Chinesische Mauer mit allen Abschnitten? | 21196 | km
-In welchem Jahr wurde der Eiffelturm fertiggestellt? | 1889 | Jahr
-Wie viele Tasten hat ein normales Klavier? | 88 | Tasten
-Wie lang ist der Rhein? | 1233 | km
-Wie schnell breitet sich Schall in der Luft aus? | 343 | m/s
-Wie heiß ist die Oberfläche der Sonne ungefähr? | 5500 | °C
-Wie alt wurde Wolfgang Amadeus Mozart? | 35 | Jahre
-Wie hoch ist die Zugspitze? | 2962 | m
-In welchem Jahr sank die Titanic? | 1912 | Jahr
-Wie viele Sekunden hat ein Tag? | 86400 | Sekunden
-Wie lang ist der Äquator? | 40075 | km
-Wie tief ist der Marianengraben an seiner tiefsten Stelle ungefähr? | 10994 | m
-Wie viele Mannschaften nahmen an der Fußball-WM 2026 teil? | 48 | Teams
-Wie lang ist ein Fußballfeld für internationale Spiele laut FIFA-Empfehlung? | 105 | m
-Wie viele Liter Blut hat ein erwachsener Mensch ungefähr? | 5 | Liter
-In welchem Jahr kam das erste iPhone heraus? | 2007 | Jahr
-In welchem Jahr wurde YouTube gegründet? | 2005 | Jahr
-In welchem Jahr ging Twitch online? | 2011 | Jahr
-In welchem Jahr erschien die Vollversion von Minecraft? | 2011 | Jahr
-Wie viele Pokémon gab es in der allerersten Generation? | 151 | Pokémon
-In welchem Jahr erschien das erste „Super Mario Bros.“? | 1985 | Jahr
-Wie viele Erdtage dauert ein Jahr auf dem Mars? | 687 | Tage
-Wie hoch ist der Burj Khalifa in Dubai? | 828 | m
-Wie lang ist die Golden Gate Bridge insgesamt? | 2737 | m
-Wie lang ist die A7, die längste Autobahn Deutschlands, ungefähr? | 963 | km
-Wie lang ist der Nil ungefähr? | 6650 | km
-Wie viele Felder hat ein Sudoku? | 81 | Felder
-Wie viele Buchstaben hat das deutsche Alphabet ohne Ä, Ö, Ü und ß? | 26 | Buchstaben
-Wie weit ist die Sonne von der Erde entfernt (in Millionen Kilometern)? | 149,6 | Mio. km
-Wie viele Liter Wasser passen in ein olympisches Schwimmbecken? | 2500000 | Liter
-Wie hoch ist die Freiheitsstatue mit Sockel? | 93 | m
-In welchem Jahr lief die erste Folge der Simpsons? | 1989 | Jahr
-Wie viele Folgen hat die Serie „Friends“? | 236 | Folgen
-Wie alt wurde Elvis Presley? | 42 | Jahre
-Wie viele Minuten braucht das Sonnenlicht bis zur Erde (gerundet)? | 8 | Minuten
-Wie groß ist der Durchmesser der Erde? | 12742 | km
-Wie hoch ist der Kölner Dom? | 157 | m
+# Verrückte Mengen
+Wie viele Feuerhydranten gibt es in Los Angeles? | 61000 | Hydranten
+Wie viele Paar Schuhe werden weltweit pro Tag hergestellt? | 65,5 | Millionen
+Wie viele Bienen müssen ihr ganzes Leben lang arbeiten, damit ein Teelöffel Honig entsteht? | 12 | Bienen
+Wie viele Blüten muss eine Biene für einen Teelöffel Honig anfliegen? | 5000 | Blüten
+Wie viele Finger sind in einem komplett vollen Berliner Doppeldeckerbus (alle Sitz- und Stehplätze besetzt)? | 1200 | Finger
+Wie viele Goldbären stellt Haribo pro Tag her? | 160 | Millionen
+Wie viele Sesamkörner sind im Schnitt auf einem Big-Mac-Brötchen? | 178 | Sesamkörner
+Wie viele Currywürste werden in Deutschland pro Jahr gegessen? | 800 | Millionen
+Wie viele Pakete bearbeitet DHL in Deutschland an einem normalen Tag? | 6,7 | Millionen
+Wie viele Liter Kaffee trinkt ein Mensch in Deutschland im Schnitt pro Jahr? | 163 | Liter
+Wie viele Liter Trinkwasser verbraucht ein Mensch in Deutschland im Schnitt pro Tag? | 122 | Liter
+Wie viele Eier legt ein Huhn in Deutschland im Schnitt pro Jahr? | 302 | Eier
+Wie viele Brotsorten stehen im Deutschen Brotregister? | 3200 | Brotsorten
+
+# Bauwerke
+Wie viele Fenster hat das Empire State Building? | 6514 | Fenster
+Wie viele Nieten halten den Eiffelturm zusammen? | 2,5 | Millionen
+Wie viele Tonnen wiegt die Farbschicht auf dem Eiffelturm? | 60 | t
+Wie viele Stufen führen im Eiffelturm bis zur 2. Etage? | 674 | Stufen
+Wie viele Tonnen wiegt der Eiffelturm? | 10100 | t
+Wie viele Tonnen wiegt die Freiheitsstatue (ohne Sockel)? | 225 | t
+Wie viele Stufen hat der Südturm des Kölner Doms? | 533 | Stufen
+Wie viele Brücken gibt es in Hamburg? | 2500 | Brücken
+Wie viele Brücken gibt es in Venedig? | 400 | Brücken
+Aus wie vielen Inseln besteht Venedig? | 118 | Inseln
+Wie lang ist die längste Brücke der Welt? | 164,8 | km
+Wie tief ist das tiefste Bohrloch der Welt? | 12262 | m
+Wie viele Zuschauer passen in den Signal Iduna Park in Dortmund? | 81365 | Zuschauer
+Wie viele Zuschauer passen ins Wembley-Stadion? | 90000 | Zuschauer
+Wie lang ist das deutsche Autobahnnetz insgesamt? | 13200 | km
+Wie lang ist das Berliner U-Bahn-Netz? | 155 | km
+Wie hoch ist die Mona Lisa? | 77 | cm
+
+# Natur & Erde
+Wie viele Ameisen gibt es schätzungsweise auf der Erde? | 20 | Billiarden
+Wie viele Bäume gibt es auf der Erde? | 3 | Billionen
+Wie viel wiegt eine durchschnittliche Schäfchenwolke (1 km × 1 km × 1 km)? | 500 | t
+Wie viele Blitze zucken weltweit pro Sekunde? | 44 | Blitze
+Wie heiß kann ein Blitz werden? | 30000 | °C
+Wie viele Seen gibt es in Finnland? | 187888 | Seen
+Wie viele Inseln hat Schweden? | 267570 | Inseln
+Wie hoch ist der höchste Wasserfall der Welt, der Salto Ángel? | 979 | m
+Wie tief ist der Baikalsee, der tiefste See der Welt? | 1642 | m
+Wie schnell dreht sich die Erde am Äquator? | 1670 | km/h
+Wie schnell rast die Erde um die Sonne? | 107000 | km/h
+
+# Weltall
+Wie viele Erden würden in die Sonne passen? | 1,3 | Millionen
+Wie viele Erden passen nebeneinander quer über die Sonne? | 109 | Erden
+Wie schnell fliegt die ISS? | 27600 | km/h
+Wie oft umrundet die ISS die Erde an einem Tag? | 16 | Runden
+
+# Tiere
+Wie alt kann ein Grönlandhai laut Forschern werden? | 400 | Jahre
+Wie schwer ist das Herz eines Blauwals ungefähr? | 180 | kg
+Wie viele Eier legt eine Bienenkönigin im Frühsommer pro Tag (bis zu)? | 2000 | Eier
+Wie oft schlägt das Herz eines Kolibris im Flug pro Minute (bis zu)? | 1200 | Schläge
+Wie schnell war der schnellste gemessene Sturzflug eines Wanderfalken? | 389 | km/h
+Bis zu wie viele Stunden am Tag schläft ein Koala? | 22 | Stunden
+Wie lange kann ein Pottwal auf Beutejagd unter Wasser bleiben? | 90 | Minuten
+Wie viele Monate ist ein Elefant trächtig? | 22 | Monate
+Wie viele Augen hat eine Jakobsmuschel (bis zu)? | 200 | Augen
+
+# Mensch
+Wie oft schlägt das menschliche Herz an einem Tag? | 100000 | Schläge
+Wie viele Liter Blut pumpt das Herz eines Menschen an einem Tag? | 7000 | Liter
+Wie viele Haare hat ein blonder Mensch ungefähr auf dem Kopf? | 150000 | Haare
+Wie oft atmet ein Mensch an einem Tag? | 20000 | Atemzüge

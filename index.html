@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-105812";
+const APP_VERSION = "20261007-111833";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -363,8 +363,14 @@ const UNIT_NAMES = {
   "m": "Metern", "km": "Kilometern", "cm": "Zentimetern", "kg": "Kilogramm", "g": "Gramm", "t": "Tonnen",
   "liter": "Litern", "l": "Litern", "m/s": "Metern pro Sekunde", "km/h": "Kilometern pro Stunde", "°c": "Grad Celsius",
   "sekunden": "Sekunden", "minuten": "Minuten", "stunden": "Stunden", "tage": "Tagen", "jahre": "Jahren",
+  "monate": "Monaten",
   "mio. km": "Millionen Kilometern",
+  "millionen": "Millionen", "milliarden": "Milliarden", "billionen": "Billionen", "billiarden": "Billiarden",
 };
+
+// Bei Angaben in Millionen usw. darf der Chat auch die ganze Zahl oder "160 Mio" schreiben – wird umgerechnet
+const UNIT_MULTIPLIERS = { "mio. km": 1e6, "millionen": 1e6, "milliarden": 1e9, "billionen": 1e12, "billiarden": 1e15 };
+function unitMultiplier(unit) { return UNIT_MULTIPLIERS[(unit || "").trim().toLowerCase()] || 1; }
 
 function unitInfo(unit) {
   const u = (unit || "").trim();
@@ -940,8 +946,10 @@ function onChatMessage({ id, name, text, canControl, color }) {
   if (phase !== "question") return;
   if (current.guess) {
     if (guesses.has(id)) return; // nur der erste Tipp zählt
-    const value = parseGuess(text);
+    let value = parseGuess(text);
     if (value === null) return;
+    const mult = unitMultiplier(current.unit);
+    if (mult > 1 && value >= mult) value = value / mult; // "160 Mio" / "160000000" → 160 (Millionen)
     guesses.set(id, { name, color, value, seconds: (performance.now() - startTime) / 1000 });
     const countEl = document.getElementById("guess-count");
     if (countEl) countEl.textContent = tipCount();
