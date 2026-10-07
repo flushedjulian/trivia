@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-104022";
+const APP_VERSION = "20261007-104606";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -847,17 +847,17 @@ async function loadConfig() {
 const stage = document.getElementById("stage");
 const LAYOUT_KEY = "trivia-layout-" + (CHANNEL || "test");
 const MARGIN = 40;
+// Feste Positionen: 1 = links oben, 2 = rechts oben, 3 = rechts unten, 4 = links unten
 const POSITIONS = {
-  "oben-links": ["left", "top"], "oben": ["center", "top"], "oben-rechts": ["right", "top"],
-  "links": ["left", "middle"], "mitte": ["center", "middle"], "rechts": ["right", "middle"],
-  "unten-links": ["left", "bottom"], "unten": ["center", "bottom"], "unten-rechts": ["right", "bottom"],
+  "start": ["center", "top"], // Ausgangsposition, bevor jemand eine Position wählt
+  "1": ["left", "top"], "2": ["right", "top"], "3": ["right", "bottom"], "4": ["left", "bottom"],
 };
-const DEFAULT_LAYOUT = { pos: "oben", x: 0, y: 0, scale: 100 };
+const DEFAULT_LAYOUT = { pos: "start", x: 0, y: 0, scale: 100 };
 let layout = { ...DEFAULT_LAYOUT };
 try { layout = { ...DEFAULT_LAYOUT, ...JSON.parse(localStorage.getItem(LAYOUT_KEY)) }; } catch {}
 
 function applyLayout() {
-  const [h, v] = POSITIONS[layout.pos] || POSITIONS.oben;
+  const [h, v] = POSITIONS[layout.pos] || POSITIONS.start;
   stage.style.left = h === "left" ? MARGIN + "px" : h === "center" ? "50%" : "auto";
   stage.style.right = h === "right" ? MARGIN + "px" : "auto";
   stage.style.top = v === "top" ? MARGIN + "px" : v === "middle" ? "50%" : "auto";
@@ -874,22 +874,20 @@ function saveLayout() {
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-// "#trivia pos unten-rechts", "#trivia links 50", "#trivia größe 80", "#trivia pos reset"
+// "#trivia pos 1"–"4", "#trivia pos left 50" (up/down/left/right, Pixel), "#trivia size 80" / "+10" / "-10"
 function handleLayoutCommand(rest) {
   let m;
-  if ((m = rest.match(/^pos(?:ition)? (.+)$/))) {
-    const name = m[1].replace(/[\s_]+/g, "-").replace("center", "mitte");
-    if (name === "reset") layout = { ...DEFAULT_LAYOUT };
-    else if (POSITIONS[name]) layout = { ...layout, pos: name, x: 0, y: 0 };
-    else return false;
-  } else if ((m = rest.match(/^(links|rechts|hoch|runter)(?: (\d+))?$/))) {
-    const step = clamp(Number(m[2] || 50), 1, 1000);
-    if (m[1] === "links") layout.x = clamp(layout.x - step, -1900, 1900);
-    if (m[1] === "rechts") layout.x = clamp(layout.x + step, -1900, 1900);
-    if (m[1] === "hoch") layout.y = clamp(layout.y - step, -1000, 1000);
-    if (m[1] === "runter") layout.y = clamp(layout.y + step, -1000, 1000);
-  } else if ((m = rest.match(/^(?:größe|groesse|grösse|size) (\d+)$/))) {
-    layout.scale = clamp(Number(m[1]), 40, 130);
+  if ((m = rest.match(/^pos ([1-4])$/))) {
+    layout = { ...layout, pos: m[1], x: 0, y: 0 };
+  } else if ((m = rest.match(/^pos (up|down|left|right)(?: (\d+))?$/))) {
+    const step = clamp(Number(m[2] || 50), 1, 1900);
+    if (m[1] === "left") layout.x = clamp(layout.x - step, -1900, 1900);
+    if (m[1] === "right") layout.x = clamp(layout.x + step, -1900, 1900);
+    if (m[1] === "up") layout.y = clamp(layout.y - step, -1000, 1000);
+    if (m[1] === "down") layout.y = clamp(layout.y + step, -1000, 1000);
+  } else if ((m = rest.match(/^size ([+-]?)(\d+)$/))) {
+    const n = Number(m[2]);
+    layout.scale = clamp(m[1] === "+" ? layout.scale + n : m[1] === "-" ? layout.scale - n : n, 40, 130);
   } else {
     return false;
   }
