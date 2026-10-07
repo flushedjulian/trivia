@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-112531";
+const APP_VERSION = "20261007-113510";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -345,7 +345,7 @@ function parseGuess(text) {
   const m = s.match(/^\d[\d.,' ]*/);
   if (!m) return null;
   // Zusatz direkt hinter der Zahl ("400k", "1,5 Mio"); Einheiten wie "300m" oder "400 km" werden ignoriert
-  const sm = s.slice(m[0].length).trim().match(/^(k|tsd\.?|tausend|mio\.?|millionen|million|mrd\.?|milliarden|milliarde)(?![a-zäöüß])/);
+  const sm = s.slice(m[0].length).trim().match(/^(k|tsd\.?|tausend|mio\.?|millionen|million|mrd\.?|milliarden|milliarde|bio\.?|billionen|billion|billiarden|billiarde)(?![a-zäöüß])/);
   let num = m[0].replace(/[' ]/g, "").replace(/[.,]+$/, "");
   if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(num)) num = num.replace(/\./g, "").replace(",", "."); // 384.400 / 1.234,5
   else if (/^\d+,\d+$/.test(num)) num = num.replace(",", ".");                                  // 149,6
@@ -355,11 +355,13 @@ function parseGuess(text) {
   if (/^(k|tsd|tausend)/.test(suffix)) value *= 1e3;
   else if (/^(mio|million)/.test(suffix)) value *= 1e6;
   else if (/^(mrd|milliard)/.test(suffix)) value *= 1e9;
+  else if (/^(bio|billion)/.test(suffix)) value *= 1e12;
+  else if (/^billiard/.test(suffix)) value *= 1e15;
   return Number.isFinite(value) ? value : null;
 }
 
-// Wie die Einheit im Overlay erscheint. Der Hinweis unter der Frage verrät bewusst keine Größenordnung:
-// nur "Angabe: Meter", "Angabe: Liter", … oder bei Gezähltem einfach "Angabe: Zahl".
+// Wie die Einheit im Overlay erscheint. Der Hinweis unter der Frage ("Angabe: Meter", "Angabe: Liter", …) kommt nur
+// bei Maßeinheiten und nur, wenn die Frage die Einheit nicht schon nennt. Gezähltes und Größenordnungen bekommen keinen Hinweis.
 const UNIT_LABELS = {
   "m": "Meter", "km": "Kilometer", "cm": "Zentimeter", "kg": "Kilogramm", "g": "Gramm", "t": "Tonnen",
   "liter": "Liter", "l": "Liter", "m/s": "Meter pro Sekunde", "km/h": "km/h", "°c": "Grad Celsius",
@@ -371,14 +373,24 @@ const UNIT_LABELS = {
 const UNIT_MULTIPLIERS = { "mio. km": 1e6, "millionen": 1e6, "milliarden": 1e9, "billionen": 1e12, "billiarden": 1e15 };
 function unitMultiplier(unit) { return UNIT_MULTIPLIERS[(unit || "").trim().toLowerCase()] || 1; }
 
-// label: Hinweis unter der Frage · suffix: hinter der aufgelösten Antwort · tipSuffix: hinter den Tipps (volle Zahl)
+// suffix: hinter der aufgelösten Antwort · tipSuffix: hinter den Tipps (volle Zahl)
 function unitInfo(unit) {
   const u = (unit || "").trim();
   const key = u.toLowerCase();
-  if (key === "jahr") return { label: "Angabe: Jahreszahl", suffix: "", tipSuffix: "" };
-  if (key === "mio. km") return { label: "Angabe: Kilometer", suffix: " Mio. km", tipSuffix: " km" };
-  if (UNIT_LABELS[key]) return { label: "Angabe: " + UNIT_LABELS[key], suffix: " " + u, tipSuffix: " " + u };
-  return { label: "Angabe: Zahl", suffix: u ? " " + u : "", tipSuffix: "" };
+  if (key === "jahr") return { suffix: "", tipSuffix: "" };
+  if (key === "mio. km") return { suffix: " Mio. km", tipSuffix: " km" };
+  if (UNIT_LABELS[key]) return { suffix: " " + u, tipSuffix: " " + u };
+  return { suffix: u ? " " + u : "", tipSuffix: "" };
+}
+
+// Hinweis unter der Frage, z.B. "Angabe: Meter" – leer, wenn er nichts Neues verrät
+function unitHint(question) {
+  const key = (question.unit || "").trim().toLowerCase();
+  const name = UNIT_LABELS[key];
+  if (!name) return "";
+  const text = question.q.toLowerCase();
+  const mentions = w => new RegExp("(^|[^a-zäöüß])" + w.toLowerCase().replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + "n?([^a-zäöüß]|$)").test(text);
+  return mentions(name) || mentions(key) ? "" : "Angabe: " + name;
 }
 
 // große Tipps lesbar machen: 160000000 → "160 Mio.", 2e16 → "20 Billiarden"
@@ -667,7 +679,7 @@ function showQuestion(elapsed) {
   if (current.guess) {
     setBody(`
       <div class="question">${escapeHtml(current.q)}</div>
-      <div class="unit-badge">${escapeHtml(unitInfo(current.unit).label)}</div>
+      ${unitHint(current) ? `<div class="unit-badge">${escapeHtml(unitHint(current))}</div>` : ""}
       <div class="points-row">
         <span class="points" id="guess-count">${tipCount()}</span>
         <div class="bar"><div id="bar" style="width:${Math.max(0, 100 - elapsed / CONFIG.guessSeconds * 100)}%"></div></div>

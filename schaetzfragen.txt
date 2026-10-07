@@ -1,9 +1,10 @@
 # Schätzfragen – eine Frage pro Zeile:
 #   Frage | richtige Zahl | Einheit
 # Einheiten: m, km, cm, kg, t, Liter, m/s, km/h, °C, Sekunden, Minuten, Stunden, Tage, Monate, Jahre, Jahr (= Jahreszahl),
-#   Millionen, Milliarden, Billionen, Billiarden, Mio. km – oder ein Zählwort wie Brücken, Fenster (wird als „Anzahl …“ angezeigt).
+#   Millionen, Milliarden, Billionen, Billiarden, Mio. km – oder ein Zählwort wie Brücken, Fenster.
 # Zahlen ohne Tausenderpunkte schreiben, Kommazahlen mit Komma (z.B. 149,6).
-# Bei „Millionen“ usw. zeigt das Overlay nur „Angabe: Zahl“. Der Chat tippt die volle Zahl („160000000“ oder „160 Mio“).
+# „Angabe: …“ erscheint nur bei Maßeinheiten (Meter, Liter, Gramm, km/h, Stunden …) und nur, wenn die Frage
+#   die Einheit nicht schon nennt. Bei Gezähltem und bei Millionen usw. steht nichts. Der Chat tippt die volle Zahl („160000000“ oder „160 Mio“).
 # Zeilen mit # am Anfang werden ignoriert. Quellen siehe Chatverlauf (Stand Oktober 2026).
 
 # Verrückte Mengen
@@ -75,3 +76,68 @@ Wie oft schlägt das menschliche Herz an einem Tag? | 100000 | Schläge
 Wie viele Liter Blut pumpt das Herz eines Menschen an einem Tag? | 7000 | Liter
 Wie viele Haare hat ein blonder Mensch ungefähr auf dem Kopf? | 150000 | Haare
 Wie oft atmet ein Mensch an einem Tag? | 20000 | Atemzüge
+
+# Kopfrechnen & Gedankenexperimente
+Wie dick wäre ein Blatt Papier (0,1 mm), wenn man es 42-mal in der Mitte falten könnte? | 439805 | km
+Wie viele Tage bräuchte man, um zu Fuß (5 km/h, ohne Pause) einmal um den Äquator zu laufen? | 334 | Tage
+Wie viele Tage bräuchte man mit dem Auto bei 100 km/h ohne Pause bis zum Mond? | 160 | Tage
+Wie viele Jahre bräuchte man mit dem Auto bei 100 km/h ohne Pause bis zur Sonne? | 171 | Jahre
+Wie lange bräuchte man, um bis 1 Million zu zählen (eine Zahl pro Sekunde, ohne Pause)? | 11,6 | Tage
+Wie viele Jahre bräuchte man, um bis 1 Milliarde zu zählen (eine Zahl pro Sekunde, ohne Pause)? | 31,7 | Jahre
+Wie oft würde eine Menschenkette aus allen Menschen der Erde (1,5 m pro Person) um den Äquator reichen? | 307 | Runden
+Wie schwer ist die Luft in einem Zimmer von 4 × 5 Metern mit 2,5 m Deckenhöhe? | 60 | kg
+Wie schwer wäre 1 Million Euro komplett in 1-Cent-Münzen? | 230 | t
+Wie hoch wäre ein Stapel aus 1 Million 1-Cent-Münzen? | 1670 | m
+Wie viele Sekunden hat ein Jahr mit 365 Tagen? | 31,536 | Millionen
+Wie oft schlägt ein menschliches Herz in 80 Jahren ungefähr? | 3 | Milliarden
+Wie viele Stunden alt ist man an seinem 18. Geburtstag? | 157788 | Stunden
+Aus wie vielen Buchstaben besteht das Wort „Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz“? | 63 | Buchstaben
+
+# Verrückte Rekorde
+Wie lange hatte der Mann mit dem längsten Schluckauf der Geschichte ununterbrochen Schluckauf? | 68 | Jahre
+Wie lange blieb Randy Gardner 1964 für den bekanntesten Wachbleib-Rekord am Stück wach? | 11 | Tage
+Wie lang waren die längsten jemals gemessenen Haare einer Frau? | 5,63 | m
+Wie viele Hot Dogs schaffte der Rekordhalter beim Nathan's Wettessen in 10 Minuten? | 76 | Hot Dogs
+Wie viele Minuten dauerte das längste Tennismatch der Geschichte (Wimbledon 2010)? | 665 | Minuten
+Wie viele Tore fielen beim höchsten offiziellen Fußballergebnis der Geschichte (Madagaskar, 2002)? | 149 | Tore
+Wie schnell war der schnellste jemals gemessene Badminton-Smash? | 565 | km/h
+Wie oft wurde ein Blatt Papier beim Rekord maximal in der Mitte gefaltet? | 12 | Mal
+Wie schnell war Felix Baumgartner bei seinem Sprung aus der Stratosphäre maximal? | 1358 | km/h
+Wie lang war die längste Pizza der Welt? | 1930 | m
+1992 fiel ein Container mit Badeenten und anderen Plastiktieren in den Pazifik. Wie viele Tiere waren drin? | 28800 | Tiere
+
+# Wetter & Weltall
+Wie lang war der längste jemals gemessene Blitz? | 829 | km
+Welchen Durchmesser hatte das größte jemals gefundene Hagelkorn? | 20,3 | cm
+Wie viele Erdtage dauert eine Umdrehung der Venus um sich selbst? | 243 | Tage
+Wie heiß ist es auf der Oberfläche der Venus? | 465 | °C
+Wie lange braucht das Licht von der Sonne bis zur Erde? | 499 | Sekunden
+Wie viel Mondgestein haben die Apollo-Missionen zur Erde gebracht? | 382 | kg
+Wie viele Tage am Stück war der Rekordhalter für den längsten Weltraumaufenthalt im All? | 437 | Tage
+Wie heiß ist es im Kern der Sonne? | 15000000 | °C
+
+# Verrückte Tiere
+Wie viele Monate am Stück kann ein Mauersegler in der Luft bleiben, ohne zu landen? | 10 | Monate
+Wie schwer ist das Gehirn eines Pottwals? | 7,8 | kg
+Wie viele Beine hat der Tausendfüßer mit den meisten Beinen der Welt? | 1306 | Beine
+Wie alt wurde die älteste jemals gefundene Muschel? | 507 | Jahre
+Wie viel Krill frisst ein Blauwal in der Fresssaison an einem Tag? | 16 | t
+Wie oft pro Minute schlägt das Herz eines Blauwals beim Tauchen im Extremfall nur noch? | 2 | Schläge
+Wie schwer ist die Zunge eines Blauwals? | 2,7 | t
+Wie tief ist der tiefste gemessene Tauchgang eines Kaiserpinguins? | 564 | m
+Wie viele Kilometer fliegt eine Küstenseeschwalbe aus Grönland oder Island im Jahr? | 70900 | km
+Wie schwer ist ein Rotes Riesenkänguru bei der Geburt? | 0,75 | g
+Wie schwer ist ein neugeborener Großer Panda? | 100 | g
+Wie viele Federn hat ein Zwergschwan, der Vogel mit den meisten Federn? | 25000 | Federn
+Wie viele Saugnäpfe hat ein Pazifischer Riesenkrake insgesamt? | 2240 | Saugnäpfe
+Wie viele Eier legt ein Mondfisch auf einmal? | 300 | Millionen
+Wie viele Liter Speichel produziert eine Kuh am Tag? | 150 | Liter
+
+# Bauwerke & Technik
+Wie viele Stufen hat die längste Treppe der Welt am Niesen in der Schweiz? | 11674 | Stufen
+Wie schwer ist die Petersglocke im Kölner Dom, die größte Glocke Deutschlands? | 24 | t
+Wie viele Pfeifen hat die größte Orgel der Welt in Atlantic City? | 33112 | Pfeifen
+Wie viele Jahre dauert die Aufführung des langsamsten Musikstücks der Welt in einer Kirche in Halberstadt? | 639 | Jahre
+Wie lang ist die Küste Norwegens mit allen Fjorden und Inseln? | 100915 | km
+Wie viele Kilometer Kabel stecken in einem Airbus A380? | 530 | km
+Wie viele Räume hat der Buckingham Palace? | 775 | Räume
