@@ -36,7 +36,7 @@ Aus wie vielen Inseln besteht Venedig? | 118 | Inseln
 Wie lang ist die längste Brücke der Welt? | 164,8 | km
 Wie tief ist das tiefste Bohrloch der Welt? | 12262 | m
 Wie viele Zuschauer passen in den Signal Iduna Park in Dortmund? | 81365 | Zuschauer
-Wie viele Zuschauer passen ins Wembley-Stadion? | 90000 | Zuschauer
+Wie viele Menschen passen ins Wembley-Stadion, wenn alle 90.000 Sitzplätze besetzt sind und zusätzlich der komplette Rasen (105 × 68 m) dicht an dicht vollsteht (4 Personen pro m²)? | 118560 | Menschen
 Wie lang ist das deutsche Autobahnnetz insgesamt? | 13200 | km
 Wie lang ist das Berliner U-Bahn-Netz? | 155 | km
 Wie hoch ist die Mona Lisa? | 77 | cm
