@@ -24,6 +24,7 @@
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
+    width: 100%; height: 100%;
     background: transparent; /* transparent für OBS */
     color: var(--text);
     font-family: "Outfit", system-ui, sans-serif;
@@ -31,13 +32,15 @@
   }
   body.test { background: #3a3a3a; }
 
+  /* Position wird per Befehl gesetzt (#trivia pos …), siehe applyLayout() */
   #stage {
-    display: flex;
-    justify-content: center;
-    padding-top: 40px;
+    position: absolute; top: 40px; left: 50%;
+    width: 900px;
+    transform: translateX(-50%);
+    transition: transform var(--t-move) var(--ease);
   }
   .card {
-    width: min(900px, 92vw);
+    width: 900px;
     background: var(--card-bg);
     border: 3px solid var(--accent);
     border-radius: 28px;
@@ -186,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261006-162824";
+const APP_VERSION = "20261007-104022";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -840,6 +843,80 @@ async function loadConfig() {
   } catch {}
 }
 
+// ---------- Position & Größe (per Befehl verschiebbar, wird gespeichert) ----------
+const stage = document.getElementById("stage");
+const LAYOUT_KEY = "trivia-layout-" + (CHANNEL || "test");
+const MARGIN = 40;
+const POSITIONS = {
+  "oben-links": ["left", "top"], "oben": ["center", "top"], "oben-rechts": ["right", "top"],
+  "links": ["left", "middle"], "mitte": ["center", "middle"], "rechts": ["right", "middle"],
+  "unten-links": ["left", "bottom"], "unten": ["center", "bottom"], "unten-rechts": ["right", "bottom"],
+};
+const DEFAULT_LAYOUT = { pos: "oben", x: 0, y: 0, scale: 100 };
+let layout = { ...DEFAULT_LAYOUT };
+try { layout = { ...DEFAULT_LAYOUT, ...JSON.parse(localStorage.getItem(LAYOUT_KEY)) }; } catch {}
+
+function applyLayout() {
+  const [h, v] = POSITIONS[layout.pos] || POSITIONS.oben;
+  stage.style.left = h === "left" ? MARGIN + "px" : h === "center" ? "50%" : "auto";
+  stage.style.right = h === "right" ? MARGIN + "px" : "auto";
+  stage.style.top = v === "top" ? MARGIN + "px" : v === "middle" ? "50%" : "auto";
+  stage.style.bottom = v === "bottom" ? MARGIN + "px" : "auto";
+  const tx = h === "center" ? "-50%" : "0px";
+  const ty = v === "middle" ? "-50%" : "0px";
+  stage.style.transformOrigin = `${h === "middle" ? "center" : h} ${v === "middle" ? "center" : v}`;
+  stage.style.transform = `translate(calc(${tx} + ${layout.x}px), calc(${ty} + ${layout.y}px)) scale(${layout.scale / 100})`;
+}
+
+function saveLayout() {
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch {}
+}
+
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+// "#trivia pos unten-rechts", "#trivia links 50", "#trivia größe 80", "#trivia pos reset"
+function handleLayoutCommand(rest) {
+  let m;
+  if ((m = rest.match(/^pos(?:ition)? (.+)$/))) {
+    const name = m[1].replace(/[\s_]+/g, "-").replace("center", "mitte");
+    if (name === "reset") layout = { ...DEFAULT_LAYOUT };
+    else if (POSITIONS[name]) layout = { ...layout, pos: name, x: 0, y: 0 };
+    else return false;
+  } else if ((m = rest.match(/^(links|rechts|hoch|runter)(?: (\d+))?$/))) {
+    const step = clamp(Number(m[2] || 50), 1, 1000);
+    if (m[1] === "links") layout.x = clamp(layout.x - step, -1900, 1900);
+    if (m[1] === "rechts") layout.x = clamp(layout.x + step, -1900, 1900);
+    if (m[1] === "hoch") layout.y = clamp(layout.y - step, -1000, 1000);
+    if (m[1] === "runter") layout.y = clamp(layout.y + step, -1000, 1000);
+  } else if ((m = rest.match(/^(?:größe|groesse|grösse|size) (\d+)$/))) {
+    layout.scale = clamp(Number(m[1]), 40, 130);
+  } else {
+    return false;
+  }
+  saveLayout();
+  applyLayout();
+  previewLayout();
+  return true;
+}
+
+// Ist das Overlay gerade unsichtbar, kurz in voller Größe zeigen, damit man sieht, wo es landet
+let previewTimer = null;
+function previewLayout() {
+  if (!["idle", "stopped", "paused"].includes(phase)) return;
+  clearTimeout(previewTimer);
+  setHead("");
+  setBody(`<div class="title">Trivia – Position</div><div class="hint">So groß wird das Overlay maximal.</div>`);
+  card.classList.add("full");
+  const token = bodyToken;
+  previewTimer = setTimeout(() => {
+    if (token !== bodyToken || !["idle", "stopped", "paused"].includes(phase)) return; // inzwischen etwas anderes angezeigt
+    card.classList.add("hidden");
+    setTimeout(() => { if (token === bodyToken) card.classList.remove("full"); }, 400);
+  }, 4000);
+}
+
+applyLayout();
+
 // ---------- Chat-Nachrichten verarbeiten ----------
 function onChatMessage({ id, name, text, canControl, color }) {
   const command = text.trim().toLowerCase().replace(/\s+/g, " ");
@@ -851,6 +928,7 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (command === PREFIX + " exit") exitToMenu();
     if (command === PREFIX + " pause") pauseGame();
     if (command === PREFIX + " resume") resumeGame();
+    if (handleLayoutCommand(command.slice(PREFIX.length).trim())) return;
     const modeMatch = command.slice(PREFIX.length).match(/^ #?(\d+)$/); // "#trivia #1" (oder "#trivia 1")
     if (modeMatch) selectMode(modeMatch[1]);
     return;
