@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-104606";
+const APP_VERSION = "20261007-105441";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -942,7 +942,11 @@ function onChatMessage({ id, name, text, canControl, color }) {
     if (countEl) countEl.textContent = tipCount();
     return;
   }
-  if (!isCorrect(text, current.a, answersOf(mode.questions))) return;
+  // Wort erkennen: Schreibweise muss exakt stimmen (sonst zählt z.B. "Schaff" für "Schiff")
+  const correct = current.word
+    ? current.a.some(a => normalizeChars(a) === normalizeChars(text))
+    : isCorrect(text, current.a, answersOf(mode.questions));
+  if (!correct) return;
 
   const seconds = (performance.now() - startTime) / 1000;
   const points = pointsAt(seconds);
