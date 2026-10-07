@@ -189,7 +189,7 @@
 
 <script>
 // Version dieses Overlays – muss bei jedem Update mit version.txt übereinstimmen (automatische Aktualisierung)
-const APP_VERSION = "20261007-111833";
+const APP_VERSION = "20261007-112225";
 
 // ================== EINSTELLUNGEN ==================
 const PREFIX = "#trivia"; // Befehls-Präfix im Chat, z.B. "#trivia start"
@@ -688,10 +688,23 @@ function showQuestion(elapsed) {
   every(tick, 100);
 }
 
-// Wort erkennen: Buchstaben gleichmäßig über die Fragezeit aufdecken, der letzte bleibt verdeckt
+// Wort erkennen: ohne Zeitlimit. Buchstaben kommen immer langsamer – der 1. nach 10 s, der 2. nach
+// weiteren 20 s, der 3. nach weiteren 30 s … (Buchstabe k nach 5·k·(k+1) Sekunden). Einer bleibt immer verdeckt.
+function lettersDueAt(elapsed) {
+  return Math.floor((-1 + Math.sqrt(1 + 0.8 * Math.max(0, elapsed))) / 2);
+}
+
+// Punkte bei Wort erkennen: sinken mit jedem aufgedeckten Buchstaben von maxPoints auf minPoints
+function wordPoints() {
+  const n = wordState.revealOrder.length;
+  if (n <= 1) return CONFIG.maxPoints;
+  const progress = Math.min(wordState.shown / (n - 1), 1);
+  return Math.round(CONFIG.maxPoints - (CONFIG.maxPoints - CONFIG.minPoints) * progress);
+}
+
 function revealLetters(elapsed) {
   const n = wordState.revealOrder.length;
-  const target = Math.min(n - 1, Math.floor(elapsed / (CONFIG.questionSeconds / n)));
+  const target = Math.min(n - 1, lettersDueAt(elapsed));
   while (wordState.shown < target) {
     const i = wordState.revealOrder[wordState.shown];
     const slot = document.getElementById("slot-" + i);
@@ -726,9 +739,16 @@ function tick() {
   const pointsEl = document.getElementById("points");
   const barEl = document.getElementById("bar");
   if (timerEl) timerEl.textContent = formatTime(elapsed);
+  if (wordState) {
+    // Wort erkennen läuft, bis jemand das Wort hat – Punkte hängen an den aufgedeckten Buchstaben
+    revealLetters(elapsed);
+    const n = wordState.revealOrder.length;
+    if (pointsEl) pointsEl.textContent = "+" + wordPoints() + " Punkte";
+    if (barEl) barEl.style.width = (n <= 1 ? 100 : Math.max(0, 100 - (wordState.shown / (n - 1)) * 100)) + "%";
+    return;
+  }
   if (pointsEl) pointsEl.textContent = "+" + pointsAt(elapsed) + " Punkte";
   if (barEl) barEl.style.width = Math.max(0, 100 - (elapsed / CONFIG.questionSeconds) * 100) + "%";
-  if (wordState) revealLetters(elapsed);
   if (elapsed >= CONFIG.questionSeconds) reveal(null); // Zeit um → überspringen
 }
 
@@ -962,7 +982,7 @@ function onChatMessage({ id, name, text, canControl, color }) {
   if (!correct) return;
 
   const seconds = (performance.now() - startTime) / 1000;
-  const points = pointsAt(seconds);
+  const points = wordState ? wordPoints() : pointsAt(seconds);
   if (!scores[id]) scores[id] = { name, points: 0 };
   scores[id].name = name;
   scores[id].color = color || "";
